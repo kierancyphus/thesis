@@ -1,0 +1,122 @@
+[TITLE]
+A single pipe to check that everything is being parsed properly.
+This doesn't run the analysis for some reason :(
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern
+ 3	1	0		;
+ 4	11	0		;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern
+ 1	0		;
+ 2	50		;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ 5	1	3	1	10	100	0	Open	;
+ 6	2	4	1	10	100	0	Open	;
+ 7	3	4	10000	10	100	0	Open	;
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+
+[STATUS]
+;ID              	Status/Setting
+
+[PATTERNS]
+;ID              	Multipliers
+;Demand Pattern
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+
+[CONTROLS]
+
+[RULES]
+
+[ENERGY]
+ Global Efficiency  	75
+ Global Price       	0.0
+ Demand Charge      	0.0
+
+[EMITTERS]
+;Junction        	Coefficient
+
+[QUALITY]
+;Node            	InitQual
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+[REACTIONS]
+; idk something here
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	0:30
+ Hydraulic Timestep 	0:01
+ Report Timestep    	0:01
+ Report Start       	0:00
+ Start ClockTime    	12 am
+ Statistic          	None
+
+[REPORT]
+ Status             	Yes
+ Summary            	Yes
+ Page               	0
+
+[OPTIONS]
+ Units              	GPM
+ Headloss           	H-W
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	40
+ Accuracy           	0.001
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0
+ Unbalanced         	Continue 10
+ Pattern            	1
+ Demand Multiplier  	1.0
+ Emitter Exponent   	0.5
+ Quality            	Chlorine mg/L
+ Diffusivity        	1.0
+ Tolerance          	0.01
+
+[COORDINATES]
+;Node            	X-Coord         	Y-Coord
+ 1                  0.0                 0.0         ;
+ 2                  10.0                0.0         ;
+ 3                  20.0                0.0         ;
+
+
+[VERTICES]
+;Link            	X-Coord         	Y-Coord
+
+[LABELS]
+;X-Coord           Y-Coord          Label & Anchor Node
+
+[BACKDROP]
+ DIMENSIONS     	7.00            	6.00            	73.00           	94.00
+ UNITS          	None
+ FILE
+ OFFSET         	0.00            	0.00
+
+[END]

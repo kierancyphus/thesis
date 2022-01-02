@@ -1,5 +1,5 @@
-from typing import List, Dict, Union
-
+from typing import List, Dict, Union, Tuple
+import numpy as np
 
 class FileParser:
     def __init__(self, file_path: str) -> None:
@@ -30,8 +30,9 @@ class FileParser:
     def get_headers(self) -> List[str]:
         headers = []
         for line in self.file:
-            if len(line) > 0:
-                if line[0] == "[" and line[-1] == "]":
+            stripped_line = line.strip()
+            if len(stripped_line) > 0:
+                if stripped_line[0] == "[" and stripped_line[-1] == "]":
                     headers.append(line[1: -1])
         return headers
 
@@ -41,10 +42,10 @@ class FileParser:
         accum = []
         current = ""
         for line in self.file:
-            # skip first case
             if len(line) > 0:
                 # if this is a header (eliminates whitespace)
                 if line.strip()[1: -1] in self.headers:
+                    # skip first case
                     if len(current) > 0:
                         content_dict[current] = accum
                         accum = []
@@ -70,24 +71,28 @@ class FileParser:
         file += "[END]\n"
         return file
 
-    def add_rule(self, tank_id: str, tank_level, pipe_id: str) -> str:
+    def add_rule(self, tank_id: str, tank_level, pipe_id: str) -> Union[str, int]:
         # TODO: check if I'm actually supposed to use tabs
         if not self.added_rule:
             self.added_rule = True
             self.content["RULES"].append(self.comment)
-        rule = f"RULE\t{self.rule_count}\nIF\tTANK\t{tank_id}\tLEVEL\tABOVE\t{tank_level}\nTHEN\tPIPE\t{pipe_id}\tSTATUS\tIS\tOPEN\n\n "
+        rule = f"RULE\t{self.rule_count}\nIF\tTANK\t{tank_id}\tLEVEL\tIS\t{tank_level}\nTHEN\tPIPE\t{pipe_id}\tSTATUS\tIS\tOPEN\n\n "
         self.rule_count += 1
         self.content["RULES"].append(rule)
-        return rule
+        return self.rule_count - 1
 
-    def add_tank(self, id: str, elevation: int, init_level: int, min_level: int, max_level: int,
-                 diameter: Union[float, int], min_vol: int) -> str:
+    def add_tank(self, id: str, elevation: int, max_level: int, diameter: Union[float, int], init_level: int = 0,
+                 min_level: int = 0, min_vol: int = 0) -> str:
+        # init level, min level and min volume should always be zero, max level
+        # Diameter and max level are calculated from volume
+        # TODO: calculate coordinates and add them
         if not self.added_tank:
             self.added_tank = True
             self.content["TANKS"].append(self.comment)
-        tank = "\t".join([id, elevation, init_level, min_level, max_level, diameter, min_vol, "", "\t"])
+
+        tank = "\t".join([str(x) for x in [id, elevation, init_level, min_level, max_level, diameter, min_vol, "", ";"]])
         self.content["TANKS"].append(tank)
-        return tank
+        return id
 
     def add_pipe(self, node_a: Union[str, int], node_b: Union[str, int], length: Union[str, int],
                  diameter: Union[str, int]) -> str:
@@ -105,38 +110,107 @@ class FileParser:
         if not self.added_pipe:
             self.added_pipe = True
             self.content["PIPES"].append(self.comment)
-        pipe = f" {node_a}__{node_b}\t{node_a}\t{node_b}\t{length}\t{diameter}\t100\t0\tOpen\t;"
+        pipe = "\t".join([str(x) for x in [f"{node_a}__{node_b}", node_a, node_b, length, diameter, 100, 0, "Open", ";"]])
+        # pipe = f" {node_a}__{node_b}\t{node_a}\t{node_b}\t{length}\t{diameter}\t100\t0\tOpen\t;"
         self.content["PIPES"].append(pipe)
-        return pipe
+        return f"{node_a}__{node_b}"
+
+    def add_psv(self, node_origin: Union[str, int]) -> Tuple[Union[str, int], Union[str, int]]:
+        # create junction to attach PSV
+        psv_start, psv_end = node_origin + "_psv", node_origin + "_psv_end"
+        psv_elevation = str(self.get_elevation(node_origin))
+        # TODO: check what demand should be
+        psv_junction = "\t".join([psv_start, psv_elevation, "0", "", ";"])
+        psv_junction_end = "\t".join([psv_end, psv_elevation, "0", "", ";"])
+        self.content["JUNCTIONS"].append(psv_junction)
+        self.content["JUNCTIONS"].append(psv_junction_end)
+
+        # attach PSV
+        pressure = str(10)  # m
+        psv_valve = "\t".join([node_origin + "_psv_pipe",  # pipe id
+                               node_origin + "_psv",  # start
+                               node_origin + "_psv_end",  # end
+                               "100",  # TODO: update diameter (I think this is cm)
+                               "PSV",  # type of valve
+                               pressure,  # pressure to be sustained
+                               "0",  # minor loss
+                               ";"])
+        self.content["VALVES"].append(psv_valve)
+        return psv_start, psv_end
+
+    def set_initial_pipes_closed(self):
+        for index, pipe in enumerate(self.content["PIPES"]):
+            pipe_split = pipe.split("\t")
+            # Status column should always be the 8th
+            pipe_split[7] = "Closed"
+            self.content["PIPES"][index] = "\t".join(pipe_split)
+
+    def get_elevation(self, node: str) -> int:
+        # need to check [JUNCTIONS] [RESERVOIRS] [TANKS]
+        for element in ("JUNCTIONS", "TANKS", "RESERVOIRS"):
+            for junction in self.content[element]:
+                junction_params = junction.split("\t")
+                if junction_params[0].strip() == node:
+                    return int(junction_params[1])
+
+        raise Exception(f"Error: There is no tank or junction called: {node}")
+
+    def parse_pipe(self, pipe: str) -> Tuple[str, str, str, int, Union[int, float], int, int, int, int]:
+        """
+        Returns useful values about the pipe. Note: node_a is always the pipe with the lower elevation
+        :param pipe: row from the parsed file
+        :return: id, node_a, node_b, length, diameter, d_z, elevation_min, volume, diameter_equivalent
+        """
+        pipe_split = pipe.split('\t')
+        pipe_id, node_a, node_b, length, diameter = pipe_split[:5]
+
+        elevation_a, elevation_b = self.get_elevation(node_a), self.get_elevation(node_b)
+        if elevation_a > elevation_b:
+            node_a, node_b = node_b, node_a
+            elevation_a, elevation_b = elevation_b, elevation_a
+
+        d_z, elevation_min = elevation_b - elevation_a, elevation_a
+        volume = 3.141 / 4 * (int(diameter) ** 2) * int(length)
+        diameter_equivalent = volume if d_z == 0 else np.sqrt(4 * volume / np.pi / d_z)
+        return pipe_id, node_a, node_b, length, diameter, d_z, elevation_min, volume, diameter_equivalent
 
     def create_intermittent_network(self) -> str:
-        for pipe in self.content["PIPES"]:
-            # self.set_initial_pipes_closed()
-            pass
-            # info = self.parse_pipe(pipe)
-            # sloping downwards
-            # equivalent_pipe = self.converter.convert_pipe(info, 'downwards')
-            # self.add_tank(...)
-            # self.add_pipe(...)
-            # self.add_rule(...)
-            # sloping upwards
-            # equivalent_pipe = self.converter.convert_pipe(info, 'upwards')
-            # self.add_tank(...)
-            # self.add_pipe(...)
-            # self.add_rule(...)
+        # all pipes in the network must be initially closed
+        # TODO: check that this includes those connected to reservoirs
+        self.set_initial_pipes_closed()
+        initial_pipes = self.content["PIPES"].copy()
+        for pipe in initial_pipes:
+            # skip over comments
+            if pipe.strip()[0] == ";":
+                continue
+
+            pipe_id, node_a, node_b, length, diameter, d_z, elevation, volume, diameter_equivalent = self.parse_pipe(
+                pipe)
+
+            tank_id = self.add_tank(f"{node_a}__{node_b}__tank", elevation, d_z, diameter_equivalent)
+
+            # lower node (no PSV)
+            equivalent_pipe_length = length
+            # TODO: change to equivalent
+            # equivalent_pipe = self.converter.convert_pipe(info)
+            self.add_pipe(node_a, tank_id, equivalent_pipe_length, diameter)
+
+            # second node (need PSV)
+            equivalent_pipe_length = length
+            # TODO: change to equivalent
+            # equivalent_pipe = self.converter.convert_pipe(info)
+            psv_start, psv_end = self.add_psv(node_b)
+            self.add_pipe(node_b, psv_start, equivalent_pipe_length, diameter)  # original node to PSV
+            self.add_pipe(psv_end, tank_id, 1, 1000)  # PSV to tank
+
+            # TODO: tank level is elevation + d_z or just d_z?
+            self.add_rule(tank_id, elevation + d_z, pipe_id)
         pass
 
 
 if __name__ == "__main__":
-    test_file_path = 'test_files/test.inp'
+    test_file_path = 'test_files/single.inp'
     parser = FileParser(test_file_path)
-    # print(parser.headers)
-    parser.add_pipe(10, 2, 10000, 18)
-    for key, item in parser.content.items():
-        if key == "PIPES":
-            for line in item:
-                print(line)
-    parser.add_rule("2", "100", "2")
+    parser.create_intermittent_network()
     reconstructed = parser.reconstruct_file()
-    # print(reconstructed)
-    # print(parser.rule_count)
+    print(reconstructed)
