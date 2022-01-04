@@ -27,8 +27,10 @@ class FileParser:
         self.rule_count = self.get_rule_count()
 
         # converter for calculating equivalent lengths
-        # TODO: get it to automatically update d_h based on maximum elevation difference in network
+        # TODO: get it to automatically update pressure (d_h) based on maximum elevation difference in network
+        self.pressure = 10
         self.converter = converter
+        self.converter.update_pressure(self.pressure)
 
     def valid_input(self):
         return "TANKS" in self.headers and "PIPES" in self.headers and "RULES" in self.headers
@@ -133,13 +135,12 @@ class FileParser:
         self.content["JUNCTIONS"].append(psv_junction_end)
 
         # attach PSV
-        pressure = str(10)  # m
         psv_valve = "\t".join([node_origin + "_psv_pipe",  # pipe id
                                node_origin + "_psv",  # start
                                node_origin + "_psv_end",  # end
                                "100",  # TODO: update diameter (I think this is cm)
                                "PSV",  # type of valve
-                               pressure,  # pressure to be sustained
+                               str(self.pressure),  # pressure to be sustained
                                "0",  # minor loss
                                ";"])
         self.content["VALVES"].append(psv_valve)
@@ -183,7 +184,6 @@ class FileParser:
 
     def create_intermittent_network(self) -> str:
         # all pipes in the network must be initially closed
-        # TODO: check that this includes those connected to reservoirs
         self.set_initial_pipes_closed()
         initial_pipes = self.content["PIPES"].copy()
         for pipe in initial_pipes:
@@ -206,13 +206,8 @@ class FileParser:
             self.add_pipe(node_b, psv_start, equivalent_pipe, diameter)  # original node to PSV
             self.add_pipe(psv_end, tank_id, 1, 1000)  # PSV to tank
 
-
-
-
-            self.content["PIPES"].append("\n")
-
-
-
+            #
+            self.content["PIPES"].append(";")
             # TODO: tank level is elevation + d_z or just d_z?
             self.add_rule(tank_id, elevation + d_z, pipe_id)
         pass

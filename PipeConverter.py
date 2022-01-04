@@ -8,6 +8,9 @@ class PipeConverter:
         self.d_h = d_h
         self.c = c
 
+    def update_pressure(self, pressure: float) -> None:
+        self.d_h = pressure
+
     def fill_numerically(self, t: np.ndarray, theta: float) -> Tuple[np.ndarray, np.ndarray]:
         def derivative(x, t, delta_h, c, theta):
             return np.sqrt(delta_h / c / x - np.sin(theta) / c)
@@ -42,9 +45,7 @@ class PipeConverter:
 
         # calculate equivalent stats
         velocity_eq = length / tau
+        # TODO: change this to flat pipes (I think just remove d_z terms)
         length_eq = (self.d_h - d_z) / self.c / (velocity_eq ** 2)
-        # print(f"height: {d_z}, length: {length}")
-        # print(f"length: {length}, equivalent length: {length_eq}")
-        # print()
 
         return length_eq
