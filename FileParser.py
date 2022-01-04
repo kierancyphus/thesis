@@ -27,13 +27,32 @@ class FileParser:
         self.rule_count = self.get_rule_count()
 
         # converter for calculating equivalent lengths
-        # TODO: get it to automatically update pressure (d_h) based on maximum elevation difference in network
-        self.pressure = 10
+        self.pressure = self.calculate_required_pressure()
         self.converter = converter
         self.converter.update_pressure(self.pressure)
 
+    def calculate_required_pressure(self) -> float:
+        """
+        Determines the range in elevation of the network and then assumes that there is twice that much pressure in
+        the system
+        :return:
+        """
+        lowest = highest = 0
+        for element in ("JUNCTIONS", "TANKS", "RESERVOIRS"):
+            for junction in self.content[element]:
+                if self.is_comment(junction):
+                    continue
+                elevation = float(junction.split("\t")[1].strip())
+                lowest = min(lowest, elevation)
+                highest = max(highest, elevation)
+        return 1 if highest - lowest <= 0 else 2 * (highest - lowest)
+
     def valid_input(self):
         return "TANKS" in self.headers and "PIPES" in self.headers and "RULES" in self.headers
+
+    @staticmethod
+    def is_comment(string: str) -> bool:
+        return string.strip()[0] == ";"
 
     def get_headers(self) -> List[str]:
         headers = []
@@ -98,7 +117,8 @@ class FileParser:
             self.added_tank = True
             self.content["TANKS"].append(self.comment)
 
-        tank = "\t".join([str(x) for x in [id, elevation, init_level, min_level, max_level, diameter, min_vol, "", ";"]])
+        tank = "\t".join(
+            [str(x) for x in [id, elevation, init_level, min_level, max_level, diameter, min_vol, "", ";"]])
         self.content["TANKS"].append(tank)
         return id
 
@@ -119,14 +139,14 @@ class FileParser:
         if not self.added_pipe:
             self.added_pipe = True
             self.content["PIPES"].append(self.comment)
-        pipe = "\t".join([str(x) for x in [f"{node_a}->{node_b}", node_a, node_b, length, diameter, 100, 0, status, ";"]])
-        # pipe = f" {node_a}__{node_b}\t{node_a}\t{node_b}\t{length}\t{diameter}\t100\t0\tOpen\t;"
+        pipe = "\t".join(
+            [str(x) for x in [f"{node_a}->{node_b}", node_a, node_b, length, diameter, 100, 0, status, ";"]])
         self.content["PIPES"].append(pipe)
         return f"{node_a}__{node_b}"
 
-    def add_psv(self, node_origin: Union[str, int]) -> Tuple[Union[str, int], Union[str, int]]:
+    def add_psv(self, node_origin: Union[str, int], node_dest: Union[str, int]) -> Tuple[Union[str, int], Union[str, int]]:
         # create junction to attach PSV
-        psv_start, psv_end = node_origin + "_psv", node_origin + "_psv_end"
+        psv_start, psv_end = f"{node_origin}->{node_dest}" + "_psv", f"{node_origin}->{node_dest}" + "_psv_end"
         psv_elevation = str(self.get_elevation(node_origin))
         # TODO: check what demand should be
         psv_junction = "\t".join([psv_start, psv_elevation, "0", "", ";"])
@@ -135,9 +155,9 @@ class FileParser:
         self.content["JUNCTIONS"].append(psv_junction_end)
 
         # attach PSV
-        psv_valve = "\t".join([node_origin + "_psv_pipe",  # pipe id
-                               node_origin + "_psv",  # start
-                               node_origin + "_psv_end",  # end
+        psv_valve = "\t".join([f"{node_origin}->{node_dest}" + "_psv_pipe",  # pipe id
+                               psv_start,  # start
+                               psv_end,  # end
                                "100",  # TODO: update diameter (I think this is cm)
                                "PSV",  # type of valve
                                str(self.pressure),  # pressure to be sustained
@@ -148,6 +168,8 @@ class FileParser:
 
     def set_initial_pipes_closed(self):
         for index, pipe in enumerate(self.content["PIPES"]):
+            if self.is_comment(pipe):
+                continue
             pipe_split = pipe.split("\t")
             # Status column should always be the 8th
             pipe_split[7] = "Closed"
@@ -188,7 +210,7 @@ class FileParser:
         initial_pipes = self.content["PIPES"].copy()
         for pipe in initial_pipes:
             # skip over comments
-            if pipe.strip()[0] == ";":
+            if self.is_comment(pipe):
                 continue
 
             pipe_id, node_a, node_b, length, diameter, d_z, elevation, volume, diameter_equivalent = self.parse_pipe(
@@ -202,7 +224,7 @@ class FileParser:
 
             # upper node; pipe sloping down (need PSV)
             equivalent_pipe = self.converter.equivalent_length(length, -d_z)
-            psv_start, psv_end = self.add_psv(node_b)
+            psv_start, psv_end = self.add_psv(node_b, node_a)
             self.add_pipe(node_b, psv_start, equivalent_pipe, diameter)  # original node to PSV
             self.add_pipe(psv_end, tank_id, 1, 1000)  # PSV to tank
 
@@ -214,7 +236,7 @@ class FileParser:
 
 
 if __name__ == "__main__":
-    test_file_path = 'test_files/single.inp'
+    test_file_path = 'test_files/pipe.inp'
     # bad dependency injection lol
     converter = PipeConverter(20, 1)
     parser = FileParser(test_file_path, converter)

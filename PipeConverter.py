@@ -35,7 +35,7 @@ class PipeConverter:
         # numerically fill pipe
         # Note: There is a lot of numerical instability here and we might have to sample a lot of points to get decent
         # results. Also need to test with reasonable numbers
-        t = np.linspace(0, 3 * 60, 10000)
+        t = np.linspace(0, 5 * 60, 10000)
         theta = np.arcsin(d_z / length)
         t, x = self.fill_numerically(t, theta)
         x = x.reshape(-1)
