@@ -1,6 +1,7 @@
 from typing import List, Dict, Union, Tuple
 import numpy as np
 
+
 class FileParser:
     def __init__(self, file_path: str) -> None:
         self.file_path = file_path
@@ -95,12 +96,13 @@ class FileParser:
         return id
 
     def add_pipe(self, node_a: Union[str, int], node_b: Union[str, int], length: Union[str, int],
-                 diameter: Union[str, int]) -> str:
+                 diameter: Union[str, int], status: str = "Open") -> str:
         """
         Used for adding shadow pipes - the id will always be f"{id[node_a]}__{id[node_b]}".
         It might visually look a bit different, but when you upload the model it strips whitespace, so the tabs are important here
 
         Roughness and Minor loss are both set to be 0
+        :param status: Optional status; used for to say if pipe has a check valve or not
         :param node_a:
         :param node_b:
         :param length:
@@ -110,7 +112,7 @@ class FileParser:
         if not self.added_pipe:
             self.added_pipe = True
             self.content["PIPES"].append(self.comment)
-        pipe = "\t".join([str(x) for x in [f"{node_a}__{node_b}", node_a, node_b, length, diameter, 100, 0, "Open", ";"]])
+        pipe = "\t".join([str(x) for x in [f"{node_a}__{node_b}", node_a, node_b, length, diameter, 100, 0, status, ";"]])
         # pipe = f" {node_a}__{node_b}\t{node_a}\t{node_b}\t{length}\t{diameter}\t100\t0\tOpen\t;"
         self.content["PIPES"].append(pipe)
         return f"{node_a}__{node_b}"
@@ -189,11 +191,11 @@ class FileParser:
 
             tank_id = self.add_tank(f"{node_a}__{node_b}__tank", elevation, d_z, diameter_equivalent)
 
-            # lower node (no PSV)
+            # lower node (need check valve to prevent backflow)
             equivalent_pipe_length = length
             # TODO: change to equivalent
             # equivalent_pipe = self.converter.convert_pipe(info)
-            self.add_pipe(node_a, tank_id, equivalent_pipe_length, diameter)
+            self.add_pipe(node_a, tank_id, equivalent_pipe_length, diameter, "CV")
 
             # second node (need PSV)
             equivalent_pipe_length = length
