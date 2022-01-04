@@ -10,13 +10,17 @@ class Pipe(IPipe):
         pass
 
     def fill_numerically(self, t: np.ndarray, plot=False) -> Tuple[np.ndarray, np.ndarray]:
+        def derivative_with_height(x, t, delta_h, delta_z, c):
+            return np.sqrt((delta_h - delta_z) / c / x)
+
         def derivative(x, t, delta_h, c, theta):
             deriv = np.sqrt(delta_h / c / x - np.sin(theta) / c)
             # print(f"derivative at time t: {t} is {deriv}")
             return deriv
 
         # set to be really small number so we don't get divide by 0 errors
-        x: np.ndarray = odeint(derivative, 1e-7, t, args=(self.delta_h, self.c, self.theta))
+        # x: np.ndarray = odeint(derivative, 1e-7, t, args=(self.delta_h, self.c, self.theta))
+        x: np.ndarray = odeint(derivative_with_height, 1e-7, t, args=(self.delta_h, self.delta_z, self.c))
 
         if plot:
             print("Plotting...")
