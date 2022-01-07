@@ -4,7 +4,7 @@ from scipy.integrate import odeint
 
 
 class PipeConverter:
-    def __init__(self, d_h: float, c: float) -> None:
+    def __init__(self, d_h: float = 1, c: float = 1) -> None:
         self.d_h = d_h
         self.c = c
 
