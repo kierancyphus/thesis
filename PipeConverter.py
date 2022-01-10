@@ -1,6 +1,7 @@
 from typing import Union, Tuple
 import numpy as np
 from scipy.integrate import odeint
+from SimulationTimeGuesser import SimulationTimeGuesser
 
 
 class PipeConverter:
@@ -23,6 +24,7 @@ class PipeConverter:
         """
         Note: This assumes that the pipe fills in less than three minutes.
 
+        :param max_simulation_time: how long the simulation should run for (longer pipes take longer to fill)
         :param length: total pipe length
         :param d_z: the height difference of the pipe. Can be negative (but not greater than the assumed d_h)
         :return:
@@ -32,16 +34,17 @@ class PipeConverter:
         if np.abs(d_z) < 0.01:
             return 0.44 * length
 
+        # estimate simulation time needed
+        max_simulation_time = SimulationTimeGuesser(length, d_z, 200, type="poly_length_offset").evaluate()
         # numerically fill pipe
-        # Note: There is a lot of numerical instability here and we might have to sample a lot of points to get decent
-        # results. Also need to test with reasonable numbers
-        t = np.linspace(0, 5 * 60, 10000)
+        t = np.linspace(0, max_simulation_time, 10000)
         theta = np.arcsin(d_z / length)
         t, x = self.fill_numerically(t, theta)
         x = x.reshape(-1)
 
         # roughly calculate the time it takes to fill through linear interpolation
         tau = np.interp(length, x, t)
+        # print(f"filling time: {tau}")
 
         # calculate equivalent stats
         velocity_eq = length / tau
