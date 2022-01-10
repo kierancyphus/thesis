@@ -122,10 +122,10 @@ class FileParser:
         self.content["TANKS"].append(tank)
         return id
 
-    def add_pipe(self, node_a: Union[str, int], node_b: Union[str, int], length: Union[str, int],
+    def add_pipe(self, node_a: Union[str, int], node_b: Union[str, int], length: Union[str, int, float],
                  diameter: Union[str, int], status: str = "Open") -> str:
         """
-        Used for adding shadow pipes - the id will always be f"{id[node_a]}__{id[node_b]}".
+        Used for adding shadow pipes - the id will always be f"{node_a}->{node_b}".
         It might visually look a bit different, but when you upload the model it strips whitespace, so the tabs are important here
 
         Roughness and Minor loss are both set to be 0
@@ -139,12 +139,17 @@ class FileParser:
         if not self.added_pipe:
             self.added_pipe = True
             self.content["PIPES"].append(self.comment)
+
+        node_a_id = f"({node_a})" if "->" in node_a else node_a
+        node_b_id = f"({node_b})" if "->" in node_b else node_b
+
         pipe = "\t".join(
-            [str(x) for x in [f"{node_a}->{node_b}", node_a, node_b, length, diameter, 100, 0, status, ";"]])
+            [str(x) for x in [f"{node_a_id}->{node_b_id}", node_a, node_b, length, diameter, 100, 0, status, ";"]])
         self.content["PIPES"].append(pipe)
         return f"{node_a}__{node_b}"
 
-    def add_psv(self, node_origin: Union[str, int], node_dest: Union[str, int]) -> Tuple[Union[str, int], Union[str, int]]:
+    def add_psv(self, node_origin: Union[str, int], node_dest: Union[str, int]) -> Tuple[
+        Union[str, int], Union[str, int]]:
         # create junction to attach PSV
         psv_start, psv_end = f"{node_origin}->{node_dest}" + "_psv", f"{node_origin}->{node_dest}" + "_psv_end"
         psv_elevation = str(self.get_elevation(node_origin))
@@ -185,7 +190,7 @@ class FileParser:
 
         raise Exception(f"Error: There is no tank or junction called: {node}")
 
-    def parse_pipe(self, pipe: str) -> Tuple[str, str, str, float, Union[int, float], int, int, int, int]:
+    def parse_pipe(self, pipe: str) -> Tuple[str, str, str, float, Union[int, float], int, int, float, float]:
         """
         Returns useful values about the pipe. Note: node_a is always the pipe with the lower elevation
         :param pipe: row from the parsed file
@@ -200,14 +205,19 @@ class FileParser:
             elevation_a, elevation_b = elevation_b, elevation_a
 
         d_z, elevation_min = elevation_b - elevation_a, elevation_a
-        volume = 3.141 / 4 * (int(diameter) ** 2) * int(length)
-        diameter_equivalent = volume if d_z == 0 else np.sqrt(4 * volume / np.pi / d_z)
+
+        # if height difference is 0 need to intervene so we don't get a tank with 0 height
+        d_z = 1 if d_z == 0 else d_z
+
+        volume = 3.141 / 4 * (float(diameter) ** 2) * float(length)
+        diameter_equivalent = np.sqrt(4 * volume / np.pi / d_z)
         return pipe_id, node_a, node_b, float(length), diameter, d_z, elevation_min, volume, diameter_equivalent
 
     def create_intermittent_network(self) -> str:
         # all pipes in the network must be initially closed
         self.set_initial_pipes_closed()
         initial_pipes = self.content["PIPES"].copy()
+
         for pipe in initial_pipes:
             # skip over comments
             if self.is_comment(pipe):
@@ -224,11 +234,11 @@ class FileParser:
 
             # upper node; pipe sloping down (need PSV)
             equivalent_pipe = self.converter.equivalent_length(length, -d_z)
+            print(f"pipe sloping down equivalent length: {equivalent_pipe}, length: {length}, d_z: {d_z}")
             psv_start, psv_end = self.add_psv(node_b, node_a)
             self.add_pipe(node_b, psv_start, equivalent_pipe, diameter)  # original node to PSV
             self.add_pipe(psv_end, tank_id, 1, 1000)  # PSV to tank
 
-            #
             self.content["PIPES"].append(";")
             # TODO: tank level is elevation + d_z or just d_z?
             self.add_rule(tank_id, elevation + d_z, pipe_id)
