@@ -35,7 +35,7 @@ class PipeConverter:
             return 0.44 * length
 
         # estimate simulation time needed
-        max_simulation_time = SimulationTimeGuesser(length, d_z, 200, type="poly_length_offset").evaluate()
+        max_simulation_time = SimulationTimeGuesser(length, d_z, 100, type="poly_length_offset").evaluate()
         # numerically fill pipe
         t = np.linspace(0, max_simulation_time, 10000)
         theta = np.arcsin(d_z / length)

@@ -99,11 +99,12 @@ class FileParser:
         return file
 
     def add_rule(self, tank_id: str, tank_level, pipe_id: str) -> Union[str, int]:
-        # TODO: check if I'm actually supposed to use tabs
+        # TODO: abstract this to a check comment method that takes in the section name
         if not self.added_rule:
             self.added_rule = True
             self.content["RULES"].append(self.comment)
-        rule = f"RULE\t{self.rule_count}\nIF\tTANK\t{tank_id}\tLEVEL\tIS\t{tank_level}\nTHEN\tPIPE\t{pipe_id}\tSTATUS\tIS\tOPEN\n\n "
+        # create rule s.t. it's triggered when level is above 99% of tank capacity
+        rule = f"RULE\t{self.rule_count}\nIF\tTANK\t{tank_id}\tLEVEL\tABOVE\t{tank_level * 0.99}\nTHEN\tPIPE\t{pipe_id}\tSTATUS\tIS\tOPEN\n\n "
         self.rule_count += 1
         self.content["RULES"].append(rule)
         return self.rule_count - 1
@@ -227,6 +228,9 @@ class FileParser:
                 pipe)
 
             tank_id = self.add_tank(f"{node_a}_{node_b}_tank", elevation, d_z, diameter_equivalent)
+
+            # TODO: create a class that handles connecting the tank to the nodes so that I can try
+            # TODO: different strategies
 
             # lower node; pipe sloping up (need check valve to prevent backflow)
             equivalent_pipe = self.converter.equivalent_length(length, d_z)
