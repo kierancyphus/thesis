@@ -51,7 +51,7 @@ class PipeConverterExperimenter:
                 fill_times.append(tau)
                 # fill_times.append(self.converter.equivalent_length(length, height) / length)
             if plot:
-                plt.plot(lengths, fill_times, label=f"h: {height}")
+                plt.plot(lengths, fill_times, label=f"height: {height}")
 
         if plot:
             plt.plot(lengths, [max_time for _ in lengths], label=f"max time", color="black")
@@ -66,7 +66,7 @@ class PipeConverterExperimenter:
         lengths, heights = self.get_parameters()
 
         # TODO: move this somewhere else
-        offset = 200
+        offset = 100
 
         for height in heights:
             # update pressure so integration always succeeds
@@ -86,7 +86,7 @@ class PipeConverterExperimenter:
                 fill_times.append(tau)
                 # fill_times.append(self.converter.equivalent_length(length, height, time) / length)
             if plot:
-                plt.plot(lengths, fill_times, label=f"h: {height}")
+                plt.plot(lengths, fill_times, label=f"height: {height}")
 
         if plot:
             plt.plot(lengths, [SimulationTimeGuesser(length, 0, offset, type).evaluate() for length in lengths], label="max time", color="black")
@@ -99,8 +99,8 @@ class PipeConverterExperimenter:
 
 
 if __name__ == "__main__":
-    experimenter = PipeConverterExperimenter(10, 1000, 1, 10)
-    # experimenter.constant_time()
+    experimenter = PipeConverterExperimenter(10, 75000, 1, 10)
+    experimenter.constant_time()
     experimenter.variable_time(type="poly_length_offset")
 
     results = """
