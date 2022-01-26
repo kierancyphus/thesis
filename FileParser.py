@@ -134,9 +134,6 @@ class FileParser:
         if max_level == 0:
             max_level = 1
 
-        # need to convert between m and mm
-        diameter = self.convert_pipe_diameter(diameter, read=False)
-
         tank = "\t".join(
             [str(x) for x in [id, elevation, init_level, min_level, max_level, diameter, min_vol, "", ";"]])
         self.content["TANKS"].append(tank)
@@ -229,6 +226,7 @@ class FileParser:
 
         # need to convert between m and mm
         diameter = self.convert_pipe_diameter(float(diameter), read=True)
+        print(f"in simulation diameter: {diameter}")
 
         elevation_a, elevation_b = self.get_elevation(node_a), self.get_elevation(node_b)
         if elevation_a > elevation_b:
