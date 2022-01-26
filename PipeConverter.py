@@ -40,12 +40,16 @@ class PipeConverter:
         # if it's pretty much flat just use flat pipe
         if np.abs(d_z) < 0.01:
             return 0.44 * length
-        # update the friction factor
+
+        # update the friction factor and assumed pressure
         self.calculate_c(diameter)
-        print(self.c)
+        self.update_pressure(2 * np.abs(d_z))
+        print(f"self.c : {self.c}, self.d_h: {self.d_h}")
+
         # estimate simulation time needed
-        max_simulation_time = SimulationTimeGuesser(length, d_z, 100, type="poly_length_offset").evaluate()
+        max_simulation_time = SimulationTimeGuesser(length, d_z, self.c, 100, type="poly_length_offset").evaluate()
         print(f"max_simulation_time: {max_simulation_time}, * c: {max_simulation_time * self.c}")
+
         # numerically fill pipe
         t = np.linspace(0, max_simulation_time, 10000)
         theta = np.arcsin(d_z / length)
@@ -58,13 +62,7 @@ class PipeConverter:
 
         # calculate equivalent stats
         velocity_eq = length / tau
-        # TODO: change this to flat pipes (I think just remove d_z terms)
+        # TODO: change this so there is a flat pipe option (remove the d_z)
         length_eq = (self.d_h - d_z) / self.c / (velocity_eq ** 2)
 
         return length_eq
-
-
-if __name__ == "__main__":
-    converter = PipeConverter()
-    converter.update_pressure(10)
-    converter.equivalent_length(10000, 10)
