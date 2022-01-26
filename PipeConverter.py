@@ -44,7 +44,7 @@ class PipeConverter:
 
         # roughly calculate the time it takes to fill through linear interpolation
         tau = np.interp(length, x, t)
-        # print(f"filling time: {tau}")
+        print(f"filling time: {tau}, d_z: {d_z}, length: {length}")
 
         # calculate equivalent stats
         velocity_eq = length / tau
@@ -52,3 +52,9 @@ class PipeConverter:
         length_eq = (self.d_h - d_z) / self.c / (velocity_eq ** 2)
 
         return length_eq
+
+
+if __name__ == "__main__":
+    converter = PipeConverter()
+    converter.update_pressure(10)
+    converter.equivalent_length(10000, 10)

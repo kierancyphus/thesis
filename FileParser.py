@@ -118,6 +118,10 @@ class FileParser:
             self.added_tank = True
             self.content["TANKS"].append(self.comment)
 
+        # in the case of flat pipes, we assume a default height of 1
+        if max_level == 0:
+            max_level = 1
+
         tank = "\t".join(
             [str(x) for x in [id, elevation, init_level, min_level, max_level, diameter, min_vol, "", ";"]])
         self.content["TANKS"].append(tank)
@@ -173,6 +177,7 @@ class FileParser:
         return psv_start, psv_end
 
     def set_initial_pipes_closed(self):
+        # TODO: Don't close math pipes otherwise the networks won't run!
         for index, pipe in enumerate(self.content["PIPES"]):
             if self.is_comment(pipe):
                 continue
@@ -207,11 +212,12 @@ class FileParser:
 
         d_z, elevation_min = elevation_b - elevation_a, elevation_a
 
-        # if height difference is 0 need to intervene so we don't get a tank with 0 height
-        d_z = 1 if d_z == 0 else d_z
-
         volume = 3.141 / 4 * (float(diameter) ** 2) * float(length)
-        diameter_equivalent = np.sqrt(4 * volume / np.pi / d_z)
+        if d_z == 0:
+            diameter_equivalent = np.sqrt(4 * volume / np.pi / 1)
+        else:
+            diameter_equivalent = np.sqrt(4 * volume / np.pi / d_z)
+
         return pipe_id, node_a, node_b, float(length), diameter, d_z, elevation_min, volume, diameter_equivalent
 
     def create_intermittent_network(self) -> str:
@@ -226,6 +232,11 @@ class FileParser:
 
             pipe_id, node_a, node_b, length, diameter, d_z, elevation, volume, diameter_equivalent = self.parse_pipe(
                 pipe)
+
+            # these pipes usually don't exist and are usually used for connecting different components, so we don't
+            # want to model them.
+            if length <= 1:
+                continue
 
             tank_id = self.add_tank(f"{node_a}_{node_b}_tank", elevation, d_z, diameter_equivalent)
 

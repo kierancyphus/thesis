@@ -4,30 +4,38 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 [JUNCTIONS]
 ;ID              	Elev        	Demand      	Pattern
  2	0	0		;
- 3	10	0		;
+ 3	0	0		;
+3->2_psv	0	0		;
+3->2_psv_end	0	0		;
 
 [RESERVOIRS]
 ;ID              	Head        	Pattern
  1	0		;
- 4	10		;
+ 4	20		;
 
 [TANKS]
 ;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
-;1	0	0	0	10	10	0		;
-;2	10	10	0	10	10	0		;
+;Automated content below - Do not edit!
+2_3_tank	0	0	0	1	9.48593810465237	0		;
 
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
- 5	1	2	0.5	10	100	0	Open	;
- 6	3	4	0.5	10	100	0	Open	;
- 7	2	3	1000	0.3	100	0	Open	;
+ 5	1	2	0.5	10	100	0	Closed	;
+ 6	3	4	0.5	10	100	0	Closed	;
+ 7	2	3	1000	0.3	100	0	Closed	;
  ; 1 km pipe is good with .3 in diameter
+;Automated content below - Do not edit!
+2->2_3_tank	2	2_3_tank	444.4444172833531	0.3	100	0	CV	;
+3->(3->2_psv)	3	3->2_psv	444.4444172833531	0.3	100	0	Open	;
+(3->2_psv_end)->2_3_tank	3->2_psv_end	2_3_tank	1	1000	100	0	Open	;
+;
 
 [PUMPS]
 ;ID              	Node1           	Node2           	Parameters
 
 [VALVES]
 ;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss
+3->2_psv_pipe	3->2_psv	3->2_psv_end	100	PSV	40.0	0	;
 
 [TAGS]
 
@@ -47,6 +55,12 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 [CONTROLS]
 
 [RULES]
+;Automated content below - Do not edit!
+RULE	1
+IF	TANK	2_3_tank	LEVEL	ABOVE	0.0
+THEN	PIPE	 7	STATUS	IS	OPEN
+
+ 
 
 [ENERGY]
  Global Efficiency  	75
@@ -103,9 +117,8 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 ;Node            	X-Coord         	Y-Coord
  1	25.0	50.0	;
  2	30.0	50.0	;
- 3	50.0	60.0	;
+ 3	50.0	50.0	;
  4	55.0	60.0	;
-
 
 [VERTICES]
 ;Link            	X-Coord         	Y-Coord

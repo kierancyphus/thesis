@@ -4,17 +4,15 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 [JUNCTIONS]
 ;ID              	Elev        	Demand      	Pattern
  2	0	0		;
- 3	10	0		;
+ 3	0	0		;
 
 [RESERVOIRS]
 ;ID              	Head        	Pattern
  1	0		;
- 4	10		;
+ 4	20		;
 
 [TANKS]
 ;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
-;1	0	0	0	10	10	0		;
-;2	10	10	0	10	10	0		;
 
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
@@ -103,7 +101,7 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 ;Node            	X-Coord         	Y-Coord
  1	25.0	50.0	;
  2	30.0	50.0	;
- 3	50.0	60.0	;
+ 3	50.0	50.0	;
  4	55.0	60.0	;
 
 

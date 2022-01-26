@@ -34,5 +34,5 @@ class WNTRWrapper:
 
 
 if __name__ == "__main__":
-    wrapper = WNTRWrapper("./test_files/pipe.inp", True)
+    wrapper = WNTRWrapper("./test_files/network_flat.inp", True)
     wrapper.run_sim()
