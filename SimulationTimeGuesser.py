@@ -2,9 +2,10 @@ from typing import Union
 
 
 class SimulationTimeGuesser:
-    def __init__(self, length: int, height: int, offset: int = 600, type: str = "linear_length"):
+    def __init__(self, length: int, height: int, c: float, offset: int = 600, type: str = "linear_length"):
         self.length = length
         self.height = height
+        self.c = c
         # default offset is 10 minutes
         self.offset = offset
         self.type = type
@@ -19,7 +20,7 @@ class SimulationTimeGuesser:
         return self.length + self.offset
 
     def poly_length_offset(self) -> Union[int, float]:
-        return self.length ** 1.45 + self.offset
+        return (self.length * self.c * 11) ** 1.7 + self.offset
 
     def quadratic_length(self) -> Union[int, float]:
         return self.length ** 2

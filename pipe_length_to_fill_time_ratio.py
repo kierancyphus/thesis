@@ -6,7 +6,7 @@ from SimulationTimeGuesser import SimulationTimeGuesser
 
 
 class PipeConverterExperimenter:
-    def __init__(self, min_length: int = 10, max_length: int = 1000, min_height: int = 1, max_height: int = 10) -> None:
+    def __init__(self, min_length: int = 10, max_length: int = 1000, min_height: int = 1, max_height: int = 10, diameter: float = 0.3) -> None:
         """
         Class to run experiments
 
@@ -18,7 +18,9 @@ class PipeConverterExperimenter:
 
         self.min_length, self.max_length = min_length, max_length
         self.min_height, self.max_height = min_height, max_height
+        self.diameter = diameter
         self.converter = PipeConverter()
+        self.converter.calculate_c(diameter)
 
     def get_parameters(self) -> Tuple[np.ndarray, np.ndarray]:
         lengths = np.linspace(self.min_length, self.max_length, 20)
@@ -73,7 +75,7 @@ class PipeConverterExperimenter:
             self.converter.update_pressure(2 * height)
             fill_times = []
             for length in lengths:
-                time = SimulationTimeGuesser(length, height, offset, type).evaluate()
+                time = SimulationTimeGuesser(length, height, self.converter.c, offset, type).evaluate()
                 # time = length
 
                 t = np.linspace(0, time, num_points)
@@ -89,7 +91,7 @@ class PipeConverterExperimenter:
                 plt.plot(lengths, fill_times, label=f"height: {height}")
 
         if plot:
-            plt.plot(lengths, [SimulationTimeGuesser(length, 0, offset, type).evaluate() for length in lengths], label="max time", color="black")
+            plt.plot(lengths, [SimulationTimeGuesser(length, 0, self.converter.c, offset, type).evaluate() for length in lengths], label="max time", color="black")
             plt.title('Variable time integration window; max_time: length')
             plt.xlabel("pipe length")
             plt.ylabel("Time (s)")
@@ -99,8 +101,8 @@ class PipeConverterExperimenter:
 
 
 if __name__ == "__main__":
-    experimenter = PipeConverterExperimenter(10, 75000, 1, 10)
-    experimenter.constant_time()
+    experimenter = PipeConverterExperimenter(10, 50000, 1, 10)
+    # experimenter.constant_time()
     experimenter.variable_time(type="poly_length_offset")
 
     results = """

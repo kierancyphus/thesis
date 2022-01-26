@@ -244,11 +244,11 @@ class FileParser:
             # TODO: different strategies
 
             # lower node; pipe sloping up (need check valve to prevent backflow)
-            equivalent_pipe = self.converter.equivalent_length(length, d_z)
+            equivalent_pipe = self.converter.equivalent_length(length, d_z, diameter)
             self.add_pipe(node_a, tank_id, equivalent_pipe, diameter, "CV")
 
             # upper node; pipe sloping down (need PSV)
-            equivalent_pipe = self.converter.equivalent_length(length, -d_z)
+            equivalent_pipe = self.converter.equivalent_length(length, -d_z, diameter)
             print(f"pipe sloping down equivalent length: {equivalent_pipe}, length: {length}, d_z: {d_z}")
             psv_start, psv_end = self.add_psv(node_b, node_a)
             self.add_pipe(node_b, psv_start, equivalent_pipe, diameter)  # original node to PSV
