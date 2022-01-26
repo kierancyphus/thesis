@@ -195,15 +195,18 @@ class FileParser:
         self.content["VALVES"].append(psv_valve)
         return psv_start, psv_end
 
-    def set_initial_pipes_closed(self):
+    def close_pipe(self, pipe: str, index: int) -> None:
+        if self.is_comment(pipe):
+            return
+        pipe_split = pipe.split("\t")
+        # Status column should always be the 8th
+        pipe_split[7] = "Closed"
+        self.content["PIPES"][index] = "\t".join(pipe_split)
+
+    def set_initial_pipes_closed(self) -> None:
         # TODO: Don't close math pipes otherwise the networks won't run!
         for index, pipe in enumerate(self.content["PIPES"]):
-            if self.is_comment(pipe):
-                continue
-            pipe_split = pipe.split("\t")
-            # Status column should always be the 8th
-            pipe_split[7] = "Closed"
-            self.content["PIPES"][index] = "\t".join(pipe_split)
+            self.close_pipe(pipe, index)
 
     def get_elevation(self, node: str) -> int:
         # need to check [JUNCTIONS] [RESERVOIRS] [TANKS]
@@ -245,10 +248,9 @@ class FileParser:
 
     def create_intermittent_network(self) -> None:
         # all pipes in the network must be initially closed
-        self.set_initial_pipes_closed()
         initial_pipes = self.content["PIPES"].copy()
 
-        for pipe in initial_pipes:
+        for index, pipe in enumerate(initial_pipes):
             # skip over comments
             if self.is_comment(pipe):
                 continue
@@ -259,6 +261,9 @@ class FileParser:
             # want to model them.
             if parsed_pipe.length <= 1:
                 continue
+
+            # close pipe if it is long enough
+            self.close_pipe(pipe, index)
 
             self.modification_strategy.evaluate(parsed_pipe)
 
