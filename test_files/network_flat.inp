@@ -16,9 +16,9 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
- 5	1	2	0.5	10	100	0	Open	;
- 6	3	4	0.5	10	100	0	Open	;
- 7	2	3	1000	0.3	100	0	Open	;
+ 5	1	2	0.5	1000	100	0	Open	;
+ 6	3	4	0.5	1000	100	0	Open	;
+ 7	2	3	1000	300	100	0	Open	;
  ; 1 km pipe is good with .3 in diameter
 
 [PUMPS]
@@ -67,8 +67,8 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 ;Tank            	Model
 
 [TIMES]
- Duration           	00:30
- Hydraulic Timestep 	0:01
+ Duration           	05:00
+ Hydraulic Timestep 	0:00:30
  Report Timestep    	0:01
  Report Start       	0:00
  Start ClockTime    	12 am
@@ -80,7 +80,7 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
  Page               	0
 
 [OPTIONS]
- Units              	GPM
+ Units              	LPM
  Headloss           	H-W
  Specific Gravity   	1.0
  Viscosity          	1.0

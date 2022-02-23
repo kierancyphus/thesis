@@ -26,16 +26,22 @@ class ModificationStrategy:
         raise NotImplementedError()
 
     def single_tank_cv(self, pipe: ParsedPipe) -> None:
+        # insert a new tank with volume the same as that of the original pipe
+        print(pipe.diameter_equivalent)
         tank_id = self.file_parser.add_tank(f"{pipe.node_a}_{pipe.node_b}_tank", pipe.elevation_min, pipe.d_z,
                                             pipe.diameter_equivalent)
 
         # lower node; pipe sloping up (need check valve to prevent backflow)
-        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, pipe.d_z, pipe.diameter)
+        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter)
         self.file_parser.add_pipe(pipe.node_a, tank_id, equivalent_pipe, pipe.diameter, "CV")
 
         # upper node; pipe sloping down (need PSV)
-        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter)
+        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, pipe.d_z, pipe.diameter)
         self.file_parser.add_pipe(pipe.node_b, tank_id, equivalent_pipe, pipe.diameter, "CV")
+
+        # update the rules
+        # TODO: handle flat pipes better
+        self.file_parser.add_rule(tank_id, pipe.d_z, pipe.pipe_id)
         return
 
     def single_tank_psv(self, pipe: ParsedPipe) -> None:
@@ -54,6 +60,5 @@ class ModificationStrategy:
         self.file_parser.add_pipe(psv_end, tank_id, 1, 1000)  # PSV to tank
 
         self.file_parser.content["PIPES"].append(";")
-        # TODO: tank level is elevation + d_z or just d_z?
-        self.file_parser.add_rule(tank_id, pipe.elevation + pipe.d_z, pipe.pipe_id)
+        self.file_parser.add_rule(tank_id, pipe.d_z, pipe.pipe_id)
         pass

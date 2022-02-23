@@ -226,7 +226,6 @@ class FileParser:
 
         # need to convert between m and mm
         diameter = self.convert_pipe_diameter(float(diameter), read=True)
-        print(f"in simulation diameter: {diameter}")
 
         elevation_a, elevation_b = self.get_elevation(node_a), self.get_elevation(node_b)
         if elevation_a > elevation_b:
@@ -269,6 +268,7 @@ class FileParser:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", type=str)
+    parser.add_argument("--output", type=str)
     args = parser.parse_args()
     test_file_path = args.file
 
@@ -277,4 +277,6 @@ if __name__ == "__main__":
     parser = FileParser(test_file_path, converter)
     parser.create_intermittent_network()
     reconstructed = parser.reconstruct_file()
-    print(reconstructed)
+
+    with open(args.output, 'w') as f:
+        f.write(reconstructed)
