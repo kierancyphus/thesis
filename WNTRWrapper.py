@@ -1,6 +1,7 @@
-# import wntr
+import wntr
 from PipeConverter import PipeConverter
 from FileParser import FileParser
+import argparse
 
 
 class WNTRWrapper:
@@ -21,18 +22,22 @@ class WNTRWrapper:
         parser.create_intermittent_network()
         reconstructed = parser.reconstruct_file()
 
-        file_iwn = self.file.split(".inp")[0] + "_iwn.inp"
+        file_iwn = self.file.split(".inp")[0] + "_iwn_test.inp"
         with open(file_iwn, 'w') as f:
             f.write(reconstructed)
 
         return file_iwn
 
-    def run_sim(self):
+    def run_sim(self, file_prefix: str = "reports\\temp"):
         sim = wntr.sim.EpanetSimulator(self.wn)
-        results = sim.run_sim()
-        print(results)
+        sim.run_sim(file_prefix=file_prefix)
 
 
 if __name__ == "__main__":
-    wrapper = WNTRWrapper("./test_files/network_flat.inp", True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--filepath", help="filepath", type=str)
+    parser.add_argument("--create_iwn", help="pipe diameter", type=bool, default=False)
+    args = parser.parse_args()
+
+    wrapper = WNTRWrapper(args.filepath, args.create_iwn)
     wrapper.run_sim()

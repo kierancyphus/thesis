@@ -5,8 +5,6 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 ;ID              	Elev        	Demand      	Pattern
  2	0	0		;
  3	0	0		;
-3->2_psv	0	0		;
-3->2_psv_end	0	0		;
 
 [RESERVOIRS]
 ;ID              	Head        	Pattern
@@ -20,22 +18,19 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
- 5	1	2	0.5	10	100	0	Closed	;
- 6	3	4	0.5	10	100	0	Closed	;
- 7	2	3	1000	0.3	100	0	Closed	;
+ 5	1	2	0.5	1000	100	0	Open	;
+ 6	3	4	0.5	1000	100	0	Open	;
+ 7	2	3	1000	300	100	0	Closed	;
  ; 1 km pipe is good with .3 in diameter
 ;Automated content below - Do not edit!
-2->2_3_tank	2	2_3_tank	444.4444172833531	0.3	100	0	CV	;
-3->(3->2_psv)	3	3->2_psv	444.4444172833531	0.3	100	0	Open	;
-(3->2_psv_end)->2_3_tank	3->2_psv_end	2_3_tank	1	1000	100	0	Open	;
-;
+2->2_3_tank	2	2_3_tank	440.0	300.0	100	0	CV	;
+3->2_3_tank	3	2_3_tank	440.0	300.0	100	0	CV	;
 
 [PUMPS]
 ;ID              	Node1           	Node2           	Parameters
 
 [VALVES]
 ;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss
-3->2_psv_pipe	3->2_psv	3->2_psv_end	100	PSV	40.0	0	;
 
 [TAGS]
 
@@ -83,8 +78,8 @@ THEN	PIPE	 7	STATUS	IS	OPEN
 ;Tank            	Model
 
 [TIMES]
- Duration           	00:30
- Hydraulic Timestep 	0:01
+ Duration           	05:00
+ Hydraulic Timestep 	0:00:30
  Report Timestep    	0:01
  Report Start       	0:00
  Start ClockTime    	12 am
@@ -96,7 +91,7 @@ THEN	PIPE	 7	STATUS	IS	OPEN
  Page               	0
 
 [OPTIONS]
- Units              	GPM
+ Units              	LPM
  Headloss           	H-W
  Specific Gravity   	1.0
  Viscosity          	1.0
