@@ -27,7 +27,7 @@ class ModificationStrategy:
 
     def single_tank_cv(self, pipe: ParsedPipe) -> None:
         # insert a new tank with volume the same as that of the original pipe
-        print(pipe.diameter_equivalent)
+        # print(pipe.diameter_equivalent)
         tank_id = self.file_parser.add_tank(f"{pipe.node_a}_{pipe.node_b}_tank", pipe.elevation_min, pipe.d_z,
                                             pipe.diameter_equivalent)
 

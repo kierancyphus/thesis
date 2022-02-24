@@ -22,7 +22,7 @@ class WNTRWrapper:
         parser.create_intermittent_network()
         reconstructed = parser.reconstruct_file()
 
-        file_iwn = self.file.split(".inp")[0] + "_iwn_test.inp"
+        file_iwn = self.file.split(".inp")[0] + "_iwn.inp"
         with open(file_iwn, 'w') as f:
             f.write(reconstructed)
 

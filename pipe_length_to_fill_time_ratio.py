@@ -20,7 +20,7 @@ class PipeConverterExperimenter:
         self.min_height, self.max_height = min_height, max_height
         self.diameter = diameter
         self.converter = PipeConverter()
-        self.converter.calculate_c(diameter)
+        self.converter._calculate_c(diameter)
 
     def get_parameters(self) -> Tuple[np.ndarray, np.ndarray]:
         lengths = np.linspace(self.min_length, self.max_length, 20)
@@ -45,7 +45,7 @@ class PipeConverterExperimenter:
             fill_times = []
             for length in lengths:
                 theta = np.arcsin(height / length)
-                t, x = self.converter.fill_numerically(t, theta)
+                t, x = self.converter._fill_numerically(t, theta)
                 x = x.reshape(-1)
 
                 # roughly calculate the time it takes to fill through linear interpolation
@@ -80,7 +80,7 @@ class PipeConverterExperimenter:
 
                 t = np.linspace(0, time, num_points)
                 theta = np.arcsin(height / length)
-                t, x = self.converter.fill_numerically(t, theta)
+                t, x = self.converter._fill_numerically(t, theta)
                 x = x.reshape(-1)
 
                 # roughly calculate the time it takes to fill through linear interpolation
