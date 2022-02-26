@@ -9,6 +9,40 @@ from PipeConverter import PipeConverter
 from WNTRWrapper import WNTRWrapper
 
 
+def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff):
+    for ff in friction_factors:
+        plt.scatter(pipe_lengths, simulation_fill_times_by_ff[ff], label=f"{ff:.3f}", alpha=0.5)
+
+    plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black")
+    plt.title('Pipe length [m] vs filling time [s] for various friction factors')
+    plt.xlabel('Pipe length [m]')
+    plt.ylabel('Time to fill [s]')
+    plt.legend(title="friction factor")
+    plt.show()
+
+
+def plot_one_ff(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff):
+    plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black")
+    plt.scatter(pipe_lengths,
+                simulation_fill_time,
+                c=np.where(np.abs(epanet_fill_times - simulation_fill_time) <= 1.5, 'g', 'r'))  # in or out of range
+    plt.title(f'Pipe length [m] vs filling time [s] for best friction factor = {best_ff:.4f}')
+    plt.xlabel('Pipe length [m]')
+    plt.ylabel('Time to fill [s]')
+    plt.show()
+
+
+def plot_percent_error(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff):
+    plt.scatter(pipe_lengths,
+                (epanet_fill_times - simulation_fill_time) / epanet_fill_times * 100,
+                label=f"Deviation from EPANET for {best_ff:.4f}",
+                alpha=0.5)
+    plt.title(f'Percent difference from EPANET time vs filling time [s] for best friction factor = {best_ff:.4f}')
+    plt.xlabel('Pipe length [m]')
+    plt.ylabel('Percent difference from EPANET time')
+    plt.show()
+
+
 def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
     if loss == "hinge":
         return np.sum(np.abs(a - b))
@@ -65,81 +99,109 @@ def create_and_run_epanet_simulation(length: float) -> float:
     return -1
 
 
-def run_experiments():
-    pipe_lengths = list(np.linspace(100, 400, 20))
-    friction_factors = np.linspace(0.005, 0.1, 30)
-
-    # default params are pressure head of 20 and 300mm diameter
-    pressure = 20
-    diameter = 0.3
-    loss = "mse"
-
-    # find filling time for a variety of lengths and friction factors
-    results = {ff: [] for ff in friction_factors}
-    epanet_results = []
+def run_ff_simulations(pipe_lengths, friction_factors, pressure, diameter, loss):
+    simulation_fill_times_by_ff = {ff: [] for ff in friction_factors}
+    epanet_fill_times = []
     for length in tqdm(pipe_lengths, total=len(pipe_lengths)):
         # run epanet simulation
         # Note: for a flat pipe, the friction factor doesn't affect the pipe equivalent length since it is always 0.44
-        epanet_results.append(create_and_run_epanet_simulation(length))
+        epanet_fill_times.append(create_and_run_epanet_simulation(length))
 
         # run numerical integration for different ff
         for ff in friction_factors:
             converter = PipeConverter(f=ff)
             converter.update_pressure(pressure)
             fill_time = converter.fill_time(length, 0, diameter)
-            results[ff].append(fill_time)
+            simulation_fill_times_by_ff[ff].append(fill_time)
 
-    for ff in friction_factors:
-        plt.scatter(pipe_lengths, results[ff], label=f"{ff:.3f}", alpha=0.5)
-
-    plt.errorbar(pipe_lengths, epanet_results, yerr=1.5, label="EPANET", color="black")
-    plt.title('Pipe length [m] vs filling time [s] for various friction factors')
-    plt.xlabel('Pipe length [m]')
-    plt.ylabel('Time to fill [s]')
-    plt.legend(title="friction factor")
-    plt.show()
-
-    # find the best ff value and plot compared to epanet (lowest MSE)
-    epanet_results = np.array(epanet_results)
-
+    # find the best ff value and plot compared to epanet (lowest loss)
+    epanet_fill_times = np.array(epanet_fill_times)
     differences = []
-    for ff, result in results.items():
-        differences.append((get_difference(epanet_results, np.array(result), loss=loss), ff))
+    for ff, result in simulation_fill_times_by_ff.items():
+        differences.append((get_difference(epanet_fill_times, np.array(result), loss=loss), ff))
 
     _, best_ff_index = sorted(differences, key=lambda tup: tup[0])[0]
 
-    # Loss vs friction factor
-    plt.scatter(friction_factors, [d[0] for d in differences], alpha=0.5)
-    plt.xlabel('Friction Factor')
-    plt.ylabel(f'Loss function = {loss}')
-    plt.title('Loss function vs Friction factor')
-    plt.show()
+    return epanet_fill_times, simulation_fill_times_by_ff, best_ff_index
 
-    plt.errorbar(pipe_lengths, epanet_results, yerr=1.5, label="EPANET", color="black")
-    plt.scatter(pipe_lengths,
-                results[best_ff_index],
-                c=np.where(np.abs(epanet_results - results[best_ff_index]) <= 1.5, 'g', 'r'))  # in or out of range
-    plt.title(f'Pipe length [m] vs filling time [s] for best friction factor = {best_ff_index:.4f}')
-    plt.xlabel('Pipe length [m]')
-    plt.ylabel('Time to fill [s]')
-    plt.show()
+
+def process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure, diameter, loss):
+    pipe_lengths = list(np.linspace(lower_bound, upper_bound, num_length_samples))
+    epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations(pipe_lengths, friction_factors,
+                                                                                 pressure, diameter, loss)
+    simulation_fill_times = simulation_fill_times_by_ff[best_ff]
+    best_mse = get_difference(epanet_fill_times, simulation_fill_times)
+    percent_points_within_bounds = np.sum(
+        np.where(np.abs(epanet_fill_times - simulation_fill_times) <= 1.5, 1, 0)) / num_length_samples * 100
+    percent_deviations = (epanet_fill_times - simulation_fill_times) / epanet_fill_times * 100
+    result_string = "\t".join([f"[{lower_bound}, {upper_bound}]", f"{best_ff:.4f}", f"{best_mse:.4f}",
+                               f"{percent_points_within_bounds}",
+                               f"[{np.min(percent_deviations):.2f}, {np.max(percent_deviations):.2f}]"])
+    return result_string
+
+
+def get_ideal_ff_per_bucket():
+    num_length_samples = 10
+    num_friction_factor_samples = 100
+    pressure = 20
+    diameter = 0.3
+    loss = "mse"
+
+    friction_factors = np.linspace(0.02, 0.035, num_friction_factor_samples)
+
+    results = []
+    results.append("\t".join(["Range", "Friction Factor", "MSE", "% in Bounds", "% Deviation Range"]))
+    # [100, 1000]
+    for i in range(1, 80):
+        lower_bound, upper_bound = i * 100 + 1,  i * 100 + 101
+        result_string = process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure, diameter, loss)
+        results.append(result_string)
+
+    # # [1000, 5000] upper and lower bounds empirically chosen
+    # friction_factors = np.linspace(0.027, 0.031, num_friction_factor_samples)
+    # for i in range(20):
+    #     lower_bound, upper_bound = i * 200 + 1000, i * 200 + 1200
+    #     result_string = process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure,
+    #                                    diameter, loss)
+    #     results.append(result_string)
+    #
+    # # [5000, 8000] upper and lower bounds empirically chosen
+    # friction_factors = np.linspace(0.03, 0.035, num_friction_factor_samples)
+    # for i in range(6):
+    #     lower_bound, upper_bound = i * 500 + 5000, i * 500 + 5500
+    #     result_string = process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure,
+    #                                    diameter, loss)
+    #     results.append(result_string)
+
+    for result in results:
+        print(result)
+
+
+def run_experiments():
+    pipe_lengths = list(np.linspace(7000, 8000, 20))
+    friction_factors = np.linspace(0.005, 0.05, 50)
+
+    # default params are pressure head of 20 and 300mm diameter
+    pressure = 20
+    diameter = 0.3
+    loss = "mse"
+
+    epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations(pipe_lengths, friction_factors,
+                                                                                       pressure, diameter, loss)
+    ## Plotting
+    # Loss vs friction factor
+    plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff)
+
+    # EPANET vs simulation filling time for best ff value
+    plot_one_ff(pipe_lengths, epanet_fill_times, simulation_fill_times_by_ff[best_ff], best_ff)
 
     # plot differential compared to error bars
-    # plt.plot(pipe_lengths, [1.5 for _ in pipe_lengths], label="Upper Error Bound", color="red")
-    # plt.plot(pipe_lengths, [-1.5 for _ in pipe_lengths], label="Lower Error Bound", color="red")
-    plt.scatter(pipe_lengths,
-                (epanet_results - results[best_ff_index]) / epanet_results * 100,
-                label=f"Deviation from EPANET for {best_ff_index:.4f}",
-                alpha=0.5)
-    plt.title(f'Percent difference from EPANET time vs filling time [s] for best friction factor = {best_ff_index:.4f}')
-    plt.xlabel('Pipe length [m]')
-    plt.ylabel('Percent difference from EPANET time')
-    # plt.legend(title="friction factor")
-    plt.show()
+    plot_percent_error(pipe_lengths, epanet_fill_times, simulation_fill_times_by_ff[best_ff], best_ff)
 
 
 if __name__ == "__main__":
-    run_experiments()
+    # run_experiments()
+    get_ideal_ff_per_bucket()
     """
     Discussion:
     Using MSE chooses an ff value that fits better for later values since they are likely to deviate more and

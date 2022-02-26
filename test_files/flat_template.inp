@@ -66,7 +66,7 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 ;Tank            	Model
 
 [TIMES]
- Duration           	2:00:00
+ Duration           	2:12:00
  Hydraulic Timestep 	0:00:30
  Report Timestep    	0:01
  Report Start       	0:00
