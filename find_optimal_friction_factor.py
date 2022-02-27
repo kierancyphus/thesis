@@ -60,7 +60,7 @@ def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
     return np.sum((a - b) ** 2)
 
 
-def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20) -> float:
+def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20, roughness: float = 100) -> float:
     """
     Creates an epanet file based on flat_template.inp
     :param length: pipe length
@@ -78,6 +78,7 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
     epanet_file = re.sub(r"<length>", str(length), template)
     epanet_file = re.sub(r"<diameter>", str(diameter * 1000), epanet_file)
     epanet_file = re.sub(r"<pressure>", str(pressure), epanet_file)
+    epanet_file = re.sub(r"<roughness>", str(roughness), epanet_file)
 
     # create reports folder if not exists
     if not os.path.exists('reports'):
@@ -112,13 +113,13 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
     return -1
 
 
-def run_ff_simulations(pipe_lengths, friction_factors, pressure, diameter, loss):
+def run_ff_simulations(pipe_lengths, friction_factors, pressure, diameter, loss, roughness):
     simulation_fill_times_by_ff = {ff: [] for ff in friction_factors}
     epanet_fill_times = []
     for length in tqdm(pipe_lengths, total=len(pipe_lengths)):
         # run epanet simulation
         # Note: for a flat pipe, the friction factor doesn't affect the pipe equivalent length since it is always 0.44
-        epanet_fill_times.append(create_and_run_epanet_simulation(length, diameter, pressure))
+        epanet_fill_times.append(create_and_run_epanet_simulation(length, diameter, pressure, roughness))
 
         # run numerical integration for different ff
         for ff in friction_factors:
@@ -138,10 +139,10 @@ def run_ff_simulations(pipe_lengths, friction_factors, pressure, diameter, loss)
     return epanet_fill_times, simulation_fill_times_by_ff, best_ff_index
 
 
-def process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure, diameter, loss):
+def process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure, diameter, loss, roughness):
     pipe_lengths = list(np.linspace(lower_bound, upper_bound, num_length_samples))
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations(pipe_lengths, friction_factors,
-                                                                                 pressure, diameter, loss)
+                                                                                 pressure, diameter, loss, roughness)
     simulation_fill_times = simulation_fill_times_by_ff[best_ff]
     best_mse = get_difference(epanet_fill_times, simulation_fill_times)
     percent_points_within_bounds = np.sum(
@@ -158,6 +159,7 @@ def get_ideal_ff_per_bucket():
     num_friction_factor_samples = 100
     pressure = 20
     diameter = 0.3
+    roughness = 100
     loss = "mse"
 
     friction_factors = np.linspace(0.02, 0.05, num_friction_factor_samples)
@@ -167,7 +169,7 @@ def get_ideal_ff_per_bucket():
     # [100, 8000]
     for i in range(1, 80):
         lower_bound, upper_bound = i * 100 + 1,  i * 100 + 101
-        result_string = process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure, diameter, loss)
+        result_string = process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure, diameter, loss, roughness)
         results.append(result_string)
 
     # # [1000, 5000] upper and lower bounds empirically chosen
@@ -197,10 +199,11 @@ def run_experiments():
     # default params are pressure head of 20 and 300mm diameter
     pressure = 20
     diameter = 0.3
+    roughness = 100
     loss = "mse"
 
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations(pipe_lengths, friction_factors,
-                                                                                       pressure, diameter, loss)
+                                                                                       pressure, diameter, loss, roughness)
     ## Plotting
     # Loss vs friction factor
     plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff)

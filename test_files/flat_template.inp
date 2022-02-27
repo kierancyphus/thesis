@@ -16,9 +16,9 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
- 5	1	2	0.5	1000	100	0	Open	;
- 6	3	4	0.5	1000	100	0	Open	;
- 7	2	3	<length>	<diameter>	100	0	Closed	;
+ 5	1	2	0.5	1000	<roughness>	0	Open	;
+ 6	3	4	0.5	1000	<roughness>	0	Open	;
+ 7	2	3	<length>	<diameter>	<roughness>	0	Closed	;
 
 [PUMPS]
 ;ID              	Node1           	Node2           	Parameters
