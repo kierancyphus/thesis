@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+import seaborn as sns
 from tqdm import tqdm
 import os
 import re
@@ -10,14 +12,23 @@ from WNTRWrapper import WNTRWrapper
 
 
 def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff):
+    # set seaborn theme
+    sns.set_theme()
+
+    # need to find max and min ff for scaling colours
+    norm = matplotlib.colors.Normalize(vmin=np.min(friction_factors), vmax=np.max(friction_factors))
+
     for ff in friction_factors:
-        plt.scatter(pipe_lengths, simulation_fill_times_by_ff[ff], label=f"{ff:.3f}", alpha=0.5)
+        simulation_fill_time = simulation_fill_times_by_ff[ff]
+        plt.scatter(pipe_lengths, simulation_fill_time, alpha=0.5, c=[ff for _ in pipe_lengths], cmap="PuOr", norm=norm)
 
     plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black")
     plt.title('Pipe length [m] vs filling time [s] for various friction factors')
     plt.xlabel('Pipe length [m]')
     plt.ylabel('Time to fill [s]')
-    plt.legend(title="friction factor")
+    cb = plt.colorbar()
+    cb.set_label("Friction Factors")
+    plt.legend()
     plt.show()
 
 
@@ -49,7 +60,7 @@ def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
     return np.sum((a - b) ** 2)
 
 
-def create_and_run_epanet_simulation(length: float) -> float:
+def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20) -> float:
     """
     Creates an epanet file based on flat_template.inp
     :param length: pipe length
@@ -65,6 +76,8 @@ def create_and_run_epanet_simulation(length: float) -> float:
 
     # replace length tag with actual length
     epanet_file = re.sub(r"<length>", str(length), template)
+    epanet_file = re.sub(r"<diameter>", str(diameter * 1000), epanet_file)
+    epanet_file = re.sub(r"<pressure>", str(pressure), epanet_file)
 
     # create reports folder if not exists
     if not os.path.exists('reports'):
@@ -105,7 +118,7 @@ def run_ff_simulations(pipe_lengths, friction_factors, pressure, diameter, loss)
     for length in tqdm(pipe_lengths, total=len(pipe_lengths)):
         # run epanet simulation
         # Note: for a flat pipe, the friction factor doesn't affect the pipe equivalent length since it is always 0.44
-        epanet_fill_times.append(create_and_run_epanet_simulation(length))
+        epanet_fill_times.append(create_and_run_epanet_simulation(length, diameter, pressure))
 
         # run numerical integration for different ff
         for ff in friction_factors:
@@ -147,11 +160,11 @@ def get_ideal_ff_per_bucket():
     diameter = 0.3
     loss = "mse"
 
-    friction_factors = np.linspace(0.02, 0.035, num_friction_factor_samples)
+    friction_factors = np.linspace(0.02, 0.05, num_friction_factor_samples)
 
     results = []
     results.append("\t".join(["Range", "Friction Factor", "MSE", "% in Bounds", "% Deviation Range"]))
-    # [100, 1000]
+    # [100, 8000]
     for i in range(1, 80):
         lower_bound, upper_bound = i * 100 + 1,  i * 100 + 101
         result_string = process_bucket(lower_bound, upper_bound, num_length_samples, friction_factors, pressure, diameter, loss)
@@ -178,7 +191,7 @@ def get_ideal_ff_per_bucket():
 
 
 def run_experiments():
-    pipe_lengths = list(np.linspace(7000, 8000, 20))
+    pipe_lengths = list(np.linspace(1000, 1100, 20))
     friction_factors = np.linspace(0.005, 0.05, 50)
 
     # default params are pressure head of 20 and 300mm diameter
@@ -200,8 +213,8 @@ def run_experiments():
 
 
 if __name__ == "__main__":
-    # run_experiments()
-    get_ideal_ff_per_bucket()
+    run_experiments()
+    # get_ideal_ff_per_bucket()
     """
     Discussion:
     Using MSE chooses an ff value that fits better for later values since they are likely to deviate more and
