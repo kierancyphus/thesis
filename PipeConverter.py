@@ -2,6 +2,7 @@ from typing import Union, Tuple
 import numpy as np
 from scipy.integrate import odeint
 from SimulationTimeGuesser import SimulationTimeGuesser
+from FrictionFactorCalculator import FrictionFactorCalculator
 
 
 class PipeConverter:
@@ -12,14 +13,18 @@ class PipeConverter:
         self.c = c
         self.g = 9.81
         self.f = f
+        self.roughness = 100
 
     def update_pressure(self, pressure: float) -> None:
         self.d_h = pressure
 
+    def _calculate_f(self, length: Union[int, float], diameter: float):
+        friction_calculator = FrictionFactorCalculator(length, diameter, self.d_h, self.roughness)
+        self.f = friction_calculator.get_friction_factor()
+
     def _calculate_c(self, diameter: Union[float, int]) -> None:
         # Calculates the internal value of C according to the Darcy-Weisback Equation
-        # The pipes are assumed to be smooth and a friction factor of 0.04 is applied
-        # TODO: change this to provide different friction factors based on pipes
+        # The pipe friction factors are chosen based on calibration data
         self.c = self.f / diameter / 2 / self.g
 
     def _fill_numerically(self, t: np.ndarray, theta: float, flat: bool = False) -> Tuple[np.ndarray, np.ndarray]:
@@ -36,11 +41,13 @@ class PipeConverter:
             x: np.ndarray = odeint(derivative, 1e-7, t, args=(self.d_h, self.c, theta))
         return t, x
 
-    def fill_time(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float]) -> float:
+    def fill_time(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float], update_f: bool = True) -> float:
         # if it's pretty much flat just use flat pipe
         is_flat = np.abs(d_z) < 0.01
 
         # update the friction factor and assumed pressure
+        if update_f:
+            self._calculate_f(length, diameter)
         self._calculate_c(diameter)
         if not is_flat:
             self.update_pressure(2 * np.abs(d_z))

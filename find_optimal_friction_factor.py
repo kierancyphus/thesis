@@ -13,6 +13,7 @@ from WNTRWrapper import WNTRWrapper
 
 def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff):
     # set seaborn theme
+    sns.color_palette("mako", as_cmap=True)
     sns.set_theme()
 
     # need to find max and min ff for scaling colours
@@ -20,9 +21,9 @@ def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fi
 
     for ff in friction_factors:
         simulation_fill_time = simulation_fill_times_by_ff[ff]
-        plt.scatter(pipe_lengths, simulation_fill_time, alpha=0.5, c=[ff for _ in pipe_lengths], cmap="PuOr", norm=norm)
+        plt.scatter(pipe_lengths, simulation_fill_time, alpha=0.5, c=[ff for _ in pipe_lengths], norm=norm)
 
-    plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black")
+    plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black", fmt="o", alpha=0.75)
     plt.title('Pipe length [m] vs filling time [s] for various friction factors')
     plt.xlabel('Pipe length [m]')
     plt.ylabel('Time to fill [s]')
@@ -33,10 +34,12 @@ def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fi
 
 
 def plot_one_ff(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff):
-    plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black")
+    plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black", fmt="o", alpha=0.75, capsize=2)
     plt.scatter(pipe_lengths,
                 simulation_fill_time,
+                alpha=0.5,
                 c=np.where(np.abs(epanet_fill_times - simulation_fill_time) <= 1.5, 'g', 'r'))  # in or out of range
+    plt.legend(["Simulation", "EPANET"])
     plt.title(f'Pipe length [m] vs filling time [s] for best friction factor = {best_ff:.4f}')
     plt.xlabel('Pipe length [m]')
     plt.ylabel('Time to fill [s]')
@@ -125,7 +128,7 @@ def run_ff_simulations(pipe_lengths, friction_factors, pressure, diameter, loss,
         for ff in friction_factors:
             converter = PipeConverter(f=ff)
             converter.update_pressure(pressure)
-            fill_time = converter.fill_time(length, 0, diameter)
+            fill_time = converter.fill_time(length, 0, diameter, update_f=False)
             simulation_fill_times_by_ff[ff].append(fill_time)
 
     # find the best ff value and plot compared to epanet (lowest loss)
@@ -193,8 +196,25 @@ def get_ideal_ff_per_bucket():
 
 
 def run_experiments():
-    pipe_lengths = list(np.linspace(1000, 1100, 20))
-    friction_factors = np.linspace(0.005, 0.05, 50)
+    """
+    Since the fill times vs length are roughly linear in the bucket, adding more points doesn't improve the accuracy
+    of the regression
+
+    5 -> 0.0280
+    10 -> 0.0280
+    20 -> 0.0280
+    50 -> 0.0280
+
+    So I should just use 10  points to speed up the calculations
+
+    pressure 100: 0.0243
+    pressure 500: 0.0215
+
+    Friction factor changes over pressure
+    :return:
+    """
+    pipe_lengths = list(np.linspace(100, 5000, 40))
+    friction_factors = np.linspace(0.001, 0.05, 40)
 
     # default params are pressure head of 20 and 300mm diameter
     pressure = 20
