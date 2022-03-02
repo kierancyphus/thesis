@@ -1,31 +1,33 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-import seaborn as sns
-from tqdm import tqdm
 import os
 import re
 from glob import glob
+
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from tqdm import tqdm
 
 from PipeConverter import PipeConverter
 from WNTRWrapper import WNTRWrapper
 
 
 def plot_all(variable_parameter, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff,
-             param="Pipe Length [m]"):
+             param="Pipe Length [m]", filename="pipes"):
     # Loss vs friction factor
-    plot_all_ff(variable_parameter, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, param)
+    plot_all_ff(variable_parameter, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, param, filename)
 
     # EPANET vs simulation filling time for best ff value
-    plot_one_ff(variable_parameter, epanet_fill_times, simulation_fill_times_by_ff[best_ff], best_ff)
+    plot_one_ff(variable_parameter, epanet_fill_times, simulation_fill_times_by_ff[best_ff], best_ff, param, filename)
 
     # plot differential compared to error bars
-    plot_percent_error(variable_parameter, epanet_fill_times, simulation_fill_times_by_ff[best_ff], best_ff)
+    plot_percent_error(variable_parameter, epanet_fill_times, simulation_fill_times_by_ff[best_ff], best_ff, param,
+                       filename)
 
 
-def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, param):
+def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, param, filename):
     # set seaborn theme
-    sns.color_palette("mako", as_cmap=True)
+    sns.color_palette("coolwarm", as_cmap=True)
     sns.set_theme()
 
     # need to find max and min ff for scaling colours
@@ -42,10 +44,13 @@ def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fi
     cb = plt.colorbar()
     cb.set_label("Friction Factors")
     plt.legend()
+    fig = plt.gcf()
+    fig.set_size_inches(12, 10)
+    plt.savefig(f'results/all_ff_{filename}.jpg', dpi=100)
     plt.show()
 
 
-def plot_one_ff(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff):
+def plot_one_ff(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff, param, filename):
     plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black", fmt="o", alpha=0.75,
                  capsize=2)
     plt.scatter(pipe_lengths,
@@ -53,20 +58,26 @@ def plot_one_ff(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff):
                 alpha=0.5,
                 c=np.where(np.abs(epanet_fill_times - simulation_fill_time) <= 1.5, 'g', 'r'))  # in or out of range
     plt.legend(["Simulation", "EPANET"])
-    plt.title(f'Pipe length [m] vs filling time [s] for best friction factor = {best_ff:.4f}')
-    plt.xlabel('Pipe length [m]')
+    plt.title(f'Filling time [s] vs {param} for best friction factor = {best_ff:.4f}')
+    plt.xlabel(param)
     plt.ylabel('Time to fill [s]')
+    fig = plt.gcf()
+    fig.set_size_inches(12, 10)
+    plt.savefig(f'results/one_ff_{filename}.jpg', dpi=100)
     plt.show()
 
 
-def plot_percent_error(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff):
+def plot_percent_error(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff, param, filename):
     plt.scatter(pipe_lengths,
                 (epanet_fill_times - simulation_fill_time) / epanet_fill_times * 100,
                 label=f"Deviation from EPANET for {best_ff:.4f}",
                 alpha=0.5)
-    plt.title(f'Percent difference from EPANET time vs filling time [s] for best friction factor = {best_ff:.4f}')
-    plt.xlabel('Pipe length [m]')
+    plt.title(f'Percent difference from EPANET time vs {param} for best friction factor = {best_ff:.4f}')
+    plt.xlabel(param)
     plt.ylabel('Percent difference from EPANET time')
+    fig = plt.gcf()
+    fig.set_size_inches(12, 10)
+    plt.savefig(f'results/percent_error_{filename}.jpg', dpi=100)
     plt.show()
 
 
@@ -169,31 +180,6 @@ def run_ff_simulations_length(pipe_lengths, friction_factors, pressure, diameter
             converter = PipeConverter(f=ff)
             converter.update_pressure(pressure)
             fill_time = converter.fill_time(length, 0, diameter, update_f=False)
-            simulation_fill_times_by_ff[ff].append(fill_time)
-
-    # find the best ff value and plot compared to epanet (lowest loss)
-    epanet_fill_times = np.array(epanet_fill_times)
-    differences = []
-    for ff, result in simulation_fill_times_by_ff.items():
-        differences.append((get_difference(epanet_fill_times, np.array(result), loss=loss), ff))
-
-    _, best_ff_index = sorted(differences, key=lambda tup: tup[0])[0]
-
-    return epanet_fill_times, simulation_fill_times_by_ff, best_ff_index
-
-def run_ff_simulations_diameter(pipe_length, friction_factors, pressure, diameters, loss, roughness):
-    simulation_fill_times_by_ff = {ff: [] for ff in friction_factors}
-    epanet_fill_times = []
-    for diameter in tqdm(diameters, total=len(diameters)):
-        # run epanet simulation
-        # Note: for a flat pipe, the friction factor doesn't affect the pipe equivalent length since it is always 0.44
-        epanet_fill_times.append(create_and_run_epanet_simulation(pipe_length, diameter, pressure, roughness))
-
-        # run numerical integration for different ff
-        for ff in friction_factors:
-            converter = PipeConverter(f=ff)
-            converter.update_pressure(pressure)
-            fill_time = converter.fill_time(pipe_length, 0, diameter, update_f=False)
             simulation_fill_times_by_ff[ff].append(fill_time)
 
     # find the best ff value and plot compared to epanet (lowest loss)
@@ -319,7 +305,7 @@ def run_experiments():
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_length(pipe_lengths, friction_factors,
                                                                                         pressure, diameter, loss,
                                                                                         roughness)
-    plot_all(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff)
+    plot_all(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Length [m]", "length")
 
     # diameter
     length = 100
@@ -327,14 +313,14 @@ def run_experiments():
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)
-    plot_all(diameters, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff)
+    plot_all(diameters, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Diameter [m]", "diameter")
 
     # pressure
     pressures = np.linspace(5, 100, 40)
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)
-    plot_all(pressures, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff)
+    plot_all(pressures, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pressure Head [m]", "pressure")
 
 
 if __name__ == "__main__":
