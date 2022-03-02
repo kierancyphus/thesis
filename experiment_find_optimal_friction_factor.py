@@ -295,8 +295,8 @@ def run_experiments():
     Friction factor changes over pressure
     :return:
     """
-    pipe_lengths = list(np.linspace(100, 5000, 40))
-    friction_factors = np.linspace(0.001, 0.05, 40)
+    pipe_lengths = list(np.linspace(100, 5000, 50))
+    friction_factors = np.linspace(0.001, 0.05, 50)
 
     # default params are pressure head of 20 and 300mm diameter
     pressure = 20
@@ -311,15 +311,15 @@ def run_experiments():
     plot_all(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Length [m]", "length")
 
     # diameter
-    length = 100
-    diameters = list(np.linspace(0.1, 3, 40))
+    length = 1000
+    diameters = list(np.linspace(0.1, 3, 50))
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)
     plot_all(diameters, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Diameter [m]", "diameter")
 
     # pressure
-    pressures = np.linspace(5, 100, 40)
+    pressures = np.linspace(5, 100, 50)
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)
