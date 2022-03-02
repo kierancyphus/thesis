@@ -11,6 +11,10 @@ from tqdm import tqdm
 from PipeConverter import PipeConverter
 from WNTRWrapper import WNTRWrapper
 
+# set seaborn theme
+cmap = sns.color_palette("coolwarm", as_cmap=True)
+sns.set_theme()
+
 
 def plot_all(variable_parameter, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff,
              param="Pipe Length [m]", filename="pipes"):
@@ -26,16 +30,12 @@ def plot_all(variable_parameter, epanet_fill_times, friction_factors, simulation
 
 
 def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, param, filename):
-    # set seaborn theme
-    sns.color_palette("coolwarm", as_cmap=True)
-    sns.set_theme()
-
     # need to find max and min ff for scaling colours
     norm = matplotlib.colors.Normalize(vmin=np.min(friction_factors), vmax=np.max(friction_factors))
 
     for ff in friction_factors:
         simulation_fill_time = simulation_fill_times_by_ff[ff]
-        plt.scatter(pipe_lengths, simulation_fill_time, alpha=0.5, c=[ff for _ in pipe_lengths], norm=norm)
+        plt.scatter(pipe_lengths, simulation_fill_time, alpha=0.5, c=[ff for _ in pipe_lengths], norm=norm, cmap=cmap)
 
     plt.errorbar(pipe_lengths, epanet_fill_times, yerr=1.5, label="EPANET", color="black", fmt="o", alpha=0.75)
     plt.title(f'Filling time [s] vs {param} for various friction factors')
