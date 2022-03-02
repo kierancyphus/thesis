@@ -46,7 +46,8 @@ def plot_all_ff(pipe_lengths, epanet_fill_times, friction_factors, simulation_fi
     plt.legend()
     fig = plt.gcf()
     fig.set_size_inches(12, 10)
-    plt.savefig(f'results/all_ff_{filename}.jpg', dpi=100)
+    filepath = os.path.join(os.getcwd(), 'results', f'all_ff_{filename}.jpg')
+    plt.savefig(filepath, dpi=100)
     plt.show()
 
 
@@ -63,7 +64,8 @@ def plot_one_ff(pipe_lengths, epanet_fill_times, simulation_fill_time, best_ff, 
     plt.ylabel('Time to fill [s]')
     fig = plt.gcf()
     fig.set_size_inches(12, 10)
-    plt.savefig(f'results/one_ff_{filename}.jpg', dpi=100)
+    filepath = os.path.join(os.getcwd(), 'results', f'one_ff_{filename}.jpg')
+    plt.savefig(filepath, dpi=100)
     plt.show()
 
 
@@ -77,7 +79,8 @@ def plot_percent_error(pipe_lengths, epanet_fill_times, simulation_fill_time, be
     plt.ylabel('Percent difference from EPANET time')
     fig = plt.gcf()
     fig.set_size_inches(12, 10)
-    plt.savefig(f'results/percent_error_{filename}.jpg', dpi=100)
+    filepath = os.path.join(os.getcwd(), 'results', f'percent_error_{filename}.jpg')
+    plt.savefig(filepath, dpi=100)
     plt.show()
 
 
