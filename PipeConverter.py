@@ -9,10 +9,11 @@ class PipeConverter:
     def __init__(self, d_h: float = 1, c: float = 1, f: float = 0.04) -> None:
         self.d_h = d_h
         # TODO: make this a local variable
+        # self.f has to be updated on a per pipe basis, and done before self.c
+        self.f = f
         # self.c has to be updated on a per pipe basis
         self.c = c
         self.g = 9.81
-        self.f = f
         self.roughness = 100
 
     def update_pressure(self, pressure: float) -> None:

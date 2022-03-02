@@ -1,13 +1,19 @@
-import numpy as np
-from scipy.integrate import odeint
-import matplotlib.pyplot as plt
-from IPipe import IPipe
 from typing import Tuple, List
 
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from scipy.integrate import odeint
 
-class Pipe(IPipe):
-    def get_equivalent_length(self) -> float:
-        pass
+
+class Pipe:
+    def __init__(self, delta_h: float, c: float, theta: float, length: float) -> None:
+        self.delta_h = delta_h
+        self.c = c
+        self.theta = theta
+        self.length = length
+        self.delta_z = length * np.sin(theta)
 
     def fill_numerically(self, t: np.ndarray, plot=False) -> Tuple[np.ndarray, np.ndarray]:
         def derivative_with_height(x, t, delta_h, delta_z, c):
@@ -53,7 +59,8 @@ class Pipe(IPipe):
         plt.title("Position of water front over time")
         plt.show()
 
-    def numerically_calculate_equivalent_length(self, should_print=False, constant_slope=False) -> Tuple[float, float, float, float]:
+    def numerically_calculate_equivalent_length(self, should_print=False, constant_slope=False) -> Tuple[
+        float, float, float, float]:
         """
         Calculate the equivalent pipe length given the original length, c, angle of incline,
         and change in head.
@@ -87,7 +94,8 @@ class Pipe(IPipe):
 
 
 class Experimenter:
-    def __init__(self, lengths: np.ndarray, thetas: np.ndarray, heads: np.ndarray = np.array([10.]), cs: List[float] = [1]):
+    def __init__(self, thetas: np.ndarray, heads: np.ndarray = np.array([10.]),
+                 cs: List[float] = [1]):
         """
         Warnings are fine since init is only run once
 
@@ -95,38 +103,50 @@ class Experimenter:
         :param thetas: list of different angles
         :return: nothing, but it plots the effect of different angles and original lengths and prints info
         """
-        self.lengths = lengths
         self.thetas = thetas
         self.heads = heads
         self.cs = cs
 
-    def run_numerical_experiments(self, delta_h=10, c=1, default_length=10, should_print=False, constant_slope=False):
+    def run_numerical_experiments(self, c=0.03, default_length=10, should_print=False, constant_slope=False):
         flat_equivalent = (2 / 3) ** 2
 
-        l_eqs = [[Pipe(delta_h, c, theta, default_length).numerically_calculate_equivalent_length(should_print, constant_slope)[1] for theta in
+        l_eqs = [[Pipe(delta_h, c, theta, default_length).numerically_calculate_equivalent_length(should_print,
+                                                                                                  constant_slope)[1] for
+                  theta in
                   self.thetas] for delta_h in self.heads]
 
-        plt.plot(self.thetas, [flat_equivalent for _ in self.thetas], 'b', label="flat pipe equivalent")
+        # set seaborn theme
+        cmap = sns.color_palette("coolwarm", as_cmap=True)
+        sns.set_theme()
 
+        # need to find max and min head for scaling colours
+        norm = matplotlib.colors.Normalize(vmin=np.min(self.heads), vmax=np.max(self.heads))
+
+        # plot equivalent length ratio vs radians
+        plt.plot(self.thetas, [flat_equivalent for _ in self.thetas], c="black", label="Flat Pipe Equivalent")
         for index, delta_h in enumerate(self.heads):
-            plt.plot(self.thetas, np.array(l_eqs[index]) / default_length, label=f"head: {delta_h:.1f}m")
+            plt.plot(self.thetas, np.array(l_eqs[index]) / default_length, c=cmap(norm(delta_h)))
 
-        plt.xlabel('angle (radians)')
-        plt.ylabel('equivalent length (m)')
+        colorbar = plt.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap))
+        colorbar.set_label('Pressure Head [m]')
+        plt.xlabel('Angle [radians]')
+        plt.ylabel('Equivalent Length Ratio')
         plt.legend()
-        plt.title(f"Equivalent length vs Angle Incline")
+        plt.title(f"Equivalent Length Ratio vs Angle Incline")
         fig = plt.gcf()
         fig.set_size_inches(12, 10)
         plt.savefig('results/length_vs_angle.jpg', dpi=100)
         plt.show()
 
+        # plot equivalent length vs change in height
         zs = [np.sin(theta) * default_length for theta in self.thetas]
-
-        plt.plot(zs, [flat_equivalent for _ in self.thetas], 'b', label="flat pipe equivalent")
+        plt.plot(zs, [flat_equivalent for _ in self.thetas], c="black", label="Flat Pipe Equivalent")
 
         for index, delta_h in enumerate(self.heads):
-            plt.plot(zs, np.array(l_eqs[index]) / default_length, label=f"head: {delta_h:.1f}m")
+            plt.plot(zs, np.array(l_eqs[index]) / default_length, c=cmap(norm(delta_h)))
 
+        colorbar = plt.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap))
+        colorbar.set_label('Pressure Head [m]')
         plt.xlabel('Change in Height (m)')
         plt.ylabel('Equivalent Length (m)')
         plt.legend()
@@ -140,11 +160,13 @@ class Experimenter:
         Want to find something that shows the equivalent length as a function of the ratio of head vs z
         """
 
-        plt.plot(zs, [flat_equivalent for _ in self.thetas], 'b', label="flat pipe equivalent")
+        plt.plot(zs, [flat_equivalent for _ in self.thetas], c="black", label="Flat Pipe Equivalent")
 
         for index, delta_h in enumerate(self.heads):
-            plt.plot(np.array(zs) / delta_h, np.array(l_eqs[index]) / default_length, label=f"head: {delta_h:.1f}m")
+            plt.plot(np.array(zs) / delta_h, np.array(l_eqs[index]) / default_length, c=cmap(norm(delta_h)))
 
+        colorbar = plt.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap))
+        colorbar.set_label('Pressure Head [m]')
         plt.xlabel('Change in height / Pressure Head')
         plt.ylabel('Equivalent Length (m)')
         plt.legend()
@@ -174,3 +196,8 @@ class Experimenter:
         # plt.legend()
         # plt.title("Equivalent angle vs original angle incline")
         # plt.show()
+
+
+if __name__ == "__main__":
+    experimenter = Experimenter(np.linspace(-np.pi/8, np.pi/8, 100), np.linspace(1, 50, 50))
+    experimenter.run_numerical_experiments(constant_slope=True)
