@@ -2,6 +2,7 @@ import wntr
 from PipeConverter import PipeConverter
 from FileParser import FileParser
 import argparse
+import os
 
 
 class WNTRWrapper:
@@ -28,7 +29,7 @@ class WNTRWrapper:
 
         return file_iwn
 
-    def run_sim(self, file_prefix: str = "reports\\temp"):
+    def run_sim(self, file_prefix: str = os.path.join("reports", "test")):
         sim = wntr.sim.EpanetSimulator(self.wn)
         sim.run_sim(file_prefix=file_prefix)
 

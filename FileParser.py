@@ -205,13 +205,13 @@ class FileParser:
         for index, pipe in enumerate(self.content["PIPES"]):
             self.close_pipe(pipe, index)
 
-    def get_elevation(self, node: str) -> int:
+    def get_elevation(self, node: str) -> float:
         # need to check [JUNCTIONS] [RESERVOIRS] [TANKS]
         for element in ("JUNCTIONS", "TANKS", "RESERVOIRS"):
             for junction in self.content[element]:
                 junction_params = junction.split("\t")
                 if junction_params[0].strip() == node:
-                    return int(junction_params[1])
+                    return float(junction_params[1])
 
         raise Exception(f"Error: There is no tank or junction called: {node}")
 

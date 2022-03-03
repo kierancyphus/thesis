@@ -40,11 +40,11 @@ class FrictionFactorCalculator:
         raise NotImplementedError("Currently only support pipe lengths of 0.3m. More experiments required to calculate others")
 
     def get_nearest_pressure(self) -> int:
+        return 20
         if self.pressure == 20:
             return 20
         raise NotImplementedError("Currently only support pressure head of 20m. More experiments required to calculate others")
 
     def get_friction_factor(self) -> float:
-        print("I should not be here")
-        return 0.04
+        return 0.0282
         return self.lookup_table[self.length_closest][self.diameter_closest][self.pressure_closest]

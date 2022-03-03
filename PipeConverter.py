@@ -42,7 +42,7 @@ class PipeConverter:
             x: np.ndarray = odeint(derivative, 1e-7, t, args=(self.d_h, self.c, theta))
         return t, x
 
-    def fill_time(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float], update_f: bool = True) -> float:
+    def fill_time(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float], update_f: bool = True, update_pressure: bool = True) -> float:
         # if it's pretty much flat just use flat pipe
         is_flat = np.abs(d_z) < 0.01
 
@@ -50,13 +50,16 @@ class PipeConverter:
         if update_f:
             self._calculate_f(length, diameter)
         self._calculate_c(diameter)
-        if not is_flat:
+
+        if (not is_flat) and update_pressure:
+            print("here")
             self.update_pressure(2 * np.abs(d_z))
 
         # estimate simulation time needed
         max_simulation_time = SimulationTimeGuesser(length, d_z, self.c, 100, type="poly_length_offset").evaluate()
 
         # numerically fill pipe
+        # t = np.arange(start=0, stop=max_simulation_time, step=3)
         t = np.linspace(0, max_simulation_time, 10000)
         theta = np.arcsin(d_z / length)
         t, x = self._fill_numerically(t, theta, is_flat)
@@ -67,7 +70,7 @@ class PipeConverter:
 
         return tau
 
-    def equivalent_length(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float]) -> float:
+    def equivalent_length(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float], update_pressure: bool = True) -> float:
         """
         Note: This assumes that the pipe fills in less than three minutes.
 
@@ -82,7 +85,7 @@ class PipeConverter:
         if is_flat:
             return ((2 / 3) ** 2) * length
 
-        tau = self.fill_time(length, d_z, diameter)
+        tau = self.fill_time(length, d_z, diameter, update_pressure=update_pressure)
 
         # calculate equivalent stats
         velocity_eq = length / tau

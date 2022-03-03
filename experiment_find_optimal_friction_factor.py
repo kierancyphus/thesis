@@ -91,13 +91,13 @@ def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
 
 
 def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20,
-                                     roughness: float = 100) -> float:
+                                     roughness: float = 100, height: float = 10, template_prefix=None) -> float:
     """
     Creates an epanet file based on flat_template.inp
     :param length: pipe length
     :return: tau, time it takes for the pipe to fill
     """
-    template_filepath = os.path.join(os.getcwd(), 'test_files', 'flat_template.inp')
+    template_filepath = os.path.join(os.getcwd(), 'test_files', 'flat_template.inp' if template_prefix is None else template_prefix)
     if not os.path.isfile(template_filepath):
         raise ValueError('Make sure that flat_template.inp is in the test_files folder')
 
@@ -110,19 +110,20 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
     epanet_file = re.sub(r"<diameter>", str(diameter * 1000), epanet_file)
     epanet_file = re.sub(r"<pressure>", str(pressure), epanet_file)
     epanet_file = re.sub(r"<roughness>", str(roughness), epanet_file)
+    epanet_file = re.sub(f"<height>", str(height), epanet_file)
 
     # create reports folder if not exists
     if not os.path.exists('reports'):
         os.makedirs('reports')
 
     # save file
-    epanet_file_path = os.path.join(os.getcwd(), 'reports', f"flat_pipe_length_{length}.inp")
+    epanet_file_path = os.path.join(os.getcwd(), 'reports', f"{template_prefix[:-4]}_{length}_{diameter}_{pressure}_{roughness}_{height}.inp")
     with open(epanet_file_path, 'w') as f:
         f.write(epanet_file)
 
     # # run simulations
     wrapper = WNTRWrapper(epanet_file_path, True)
-    simulation_output_path = os.path.join(os.getcwd(), 'reports', f"flat_pipe_length_{length}")
+    simulation_output_path = os.path.join(os.getcwd(), 'reports', epanet_file_path[:-4])
     wrapper.run_sim(simulation_output_path)
 
     # parse report (only way to get good timestep)
@@ -130,8 +131,8 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
         simulation_report = f.read()
 
     # cleanup
-    for file in glob(os.path.join(os.getcwd(), 'reports', "*")):
-        os.remove(file)
+    # for file in glob(os.path.join(os.getcwd(), 'reports', "*")):
+    #     os.remove(file)
 
     # parse the report to find when the pipe opens (e.g. has filled)
     for line in simulation_report.splitlines():
@@ -295,8 +296,8 @@ def run_experiments():
     Friction factor changes over pressure
     :return:
     """
-    pipe_lengths = list(np.linspace(100, 5000, 50))
-    friction_factors = np.linspace(0.001, 0.05, 50)
+    pipe_lengths = list(np.linspace(950, 1050, 50))
+    friction_factors = np.linspace(0.001, 0.05, 100)
 
     # default params are pressure head of 20 and 300mm diameter
     pressure = 20
