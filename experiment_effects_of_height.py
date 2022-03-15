@@ -1,5 +1,6 @@
 from experiment_find_optimal_friction_factor import create_and_run_epanet_simulation, get_difference
 from PipeConverter import PipeConverter
+from ModificationStrategy import Strategy
 from tqdm import tqdm
 import numpy as np
 import os
@@ -14,7 +15,7 @@ def run_ff_simulations_up(heights, pipe_length, diameter, pressure, roughness):
     for height in tqdm(heights, total=len(heights)):
         # run epanet simulation
         # Note: for a flat pipe, the friction factor doesn't affect the pipe equivalent length since it is always 0.44
-        epanet_fill_times.append(create_and_run_epanet_simulation(pipe_length, diameter, pressure, roughness, height, template_filepath))
+        epanet_fill_times.append(create_and_run_epanet_simulation(pipe_length, diameter, pressure, roughness, height, template_filepath, strategy=Strategy.SINGLE_TANK_CV_CONSTANT_PRESSURE))
 
         # run numerical integration for different ff
         converter = PipeConverter()
@@ -25,7 +26,7 @@ def run_ff_simulations_up(heights, pipe_length, diameter, pressure, roughness):
 
 
 if __name__ == "__main__":
-    heights = np.linspace(0, 10, 20)
+    heights = np.linspace(0, 5, 40)
     pipe_length = 1000
     diameter = 0.3
     pressure = 20

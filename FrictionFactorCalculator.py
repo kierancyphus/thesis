@@ -46,5 +46,7 @@ class FrictionFactorCalculator:
         raise NotImplementedError("Currently only support pressure head of 20m. More experiments required to calculate others")
 
     def get_friction_factor(self) -> float:
-        return 0.0282
+        # 0.0263 for pressure 40
+        # 0.0282 for pressure 20
+        return 0.0275
         return self.lookup_table[self.length_closest][self.diameter_closest][self.pressure_closest]

@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from PipeConverter import PipeConverter
 from WNTRWrapper import WNTRWrapper
+from ModificationStrategy import Strategy
 
 # set seaborn theme
 cmap = sns.color_palette("coolwarm", as_cmap=True)
@@ -91,13 +92,14 @@ def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
 
 
 def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20,
-                                     roughness: float = 100, height: float = 10, template_prefix=None) -> float:
+                                     roughness: float = 100, height: float = 10, template_prefix=None, strategy=Strategy.SINGLE_TANK_CV) -> float:
     """
     Creates an epanet file based on flat_template.inp
     :param length: pipe length
     :return: tau, time it takes for the pipe to fill
     """
-    template_filepath = os.path.join(os.getcwd(), 'test_files', 'flat_template.inp' if template_prefix is None else template_prefix)
+    template_prefix = 'flat_template.inp' if template_prefix is None else template_prefix
+    template_filepath = os.path.join(os.getcwd(), 'test_files', template_prefix)
     if not os.path.isfile(template_filepath):
         raise ValueError('Make sure that flat_template.inp is in the test_files folder')
 
@@ -122,7 +124,7 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
         f.write(epanet_file)
 
     # # run simulations
-    wrapper = WNTRWrapper(epanet_file_path, True)
+    wrapper = WNTRWrapper(epanet_file_path, is_iwn=True, strategy=strategy)
     simulation_output_path = os.path.join(os.getcwd(), 'reports', epanet_file_path[:-4])
     wrapper.run_sim(simulation_output_path)
 
@@ -296,8 +298,8 @@ def run_experiments():
     Friction factor changes over pressure
     :return:
     """
-    pipe_lengths = list(np.linspace(950, 1050, 50))
-    friction_factors = np.linspace(0.001, 0.05, 100)
+    pipe_lengths = list(np.linspace(100, 200, 20))
+    friction_factors = np.linspace(0.02, 0.04, 100)
 
     # default params are pressure head of 20 and 300mm diameter
     pressure = 20

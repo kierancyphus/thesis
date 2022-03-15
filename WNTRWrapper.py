@@ -3,12 +3,14 @@ from PipeConverter import PipeConverter
 from FileParser import FileParser
 import argparse
 import os
+from ModificationStrategy import Strategy
 
 
 class WNTRWrapper:
-    def __init__(self, file: str, is_iwn: bool = False) -> None:
+    def __init__(self, file: str, is_iwn: bool = False, strategy: Strategy = Strategy.SINGLE_TANK_CV) -> None:
         self.file = file
         self.is_iwn = is_iwn
+        self.strategy = strategy
         if is_iwn:
             self.file_iwn = self.create_modified_network()
             self.wn = wntr.network.WaterNetworkModel(self.file_iwn)
@@ -18,7 +20,7 @@ class WNTRWrapper:
     def create_modified_network(self) -> str:
         # TODO: ideally these are passed as options to the class
         converter = PipeConverter()
-        parser = FileParser(self.file, converter)
+        parser = FileParser(self.file, converter, strategy=self.strategy)
 
         parser.create_intermittent_network()
         reconstructed = parser.reconstruct_file()

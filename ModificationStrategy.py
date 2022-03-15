@@ -4,8 +4,9 @@ from ParsedPipe import ParsedPipe
 
 class Strategy(Enum):
     MULTIPLE_TANKS = 1
-    SINGLE_TANK_CV = 2
+    SINGLE_TANK_CV = 2                      # the pressure is assumed to be 2x change in height
     SINGLE_TANK_PSV = 3
+    SINGLE_TANK_CV_CONSTANT_PRESSURE = 4    # pressure is assumed to be constant
 
 
 class ModificationStrategy:
@@ -15,7 +16,8 @@ class ModificationStrategy:
         self.methods = {
             Strategy.MULTIPLE_TANKS: self.multiple_tanks,
             Strategy.SINGLE_TANK_CV: self.single_tank_cv,
-            Strategy.SINGLE_TANK_PSV: self.single_tank_psv
+            Strategy.SINGLE_TANK_PSV: self.single_tank_psv,
+            Strategy.SINGLE_TANK_CV_CONSTANT_PRESSURE: self.single_tank_cv_constant_pressure
         }
 
     def evaluate(self, pipe: ParsedPipe) -> None:
@@ -25,9 +27,7 @@ class ModificationStrategy:
     def multiple_tanks(self, pipe: ParsedPipe) -> None:
         raise NotImplementedError()
 
-    def single_tank_cv(self, pipe: ParsedPipe) -> None:
-        update_pressure = False
-
+    def single_tank_cv(self, pipe: ParsedPipe, update_pressure=True) -> None:
         # insert a new tank with volume the same as that of the original pipe
         # print(pipe.diameter_equivalent)
         tank_id = self.file_parser.add_tank(f"{pipe.node_a}_{pipe.node_b}_tank", pipe.elevation_min, pipe.d_z,
@@ -45,6 +45,10 @@ class ModificationStrategy:
         # if the pipe is flat, the tank is assumed to have a height of 1m
         tank_level = 1 if pipe.d_z == 0 else pipe.d_z
         self.file_parser.add_rule(tank_id, tank_level, pipe.pipe_id)
+        return
+
+    def single_tank_cv_constant_pressure(self, pipe: ParsedPipe) -> None:
+        self.single_tank_cv(pipe, update_pressure=False)
         return
 
     def single_tank_psv(self, pipe: ParsedPipe) -> None:

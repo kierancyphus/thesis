@@ -35,6 +35,9 @@ class PipeConverter:
         def derivative_flat(x, t, delta_h, c):
             return np.sqrt(delta_h / c / x)
 
+        def derivative_laminar_flow(x, t, delta_h, theta, d, g):
+            return ((d ** 2) * g / 32 / x) * (delta_h - x * np.sin(theta))
+        # x: np.ndarray = odeint(derivative_laminar_flow, 1e-7, t, args=(self.d_h, theta, 0.3, self.g))
         # set to be really small number so we don't get divide by 0 errors
         if flat:
             x: np.ndarray = odeint(derivative_flat, 1e-7, t, args=(self.d_h, self.c))
@@ -52,7 +55,8 @@ class PipeConverter:
         self._calculate_c(diameter)
 
         if (not is_flat) and update_pressure:
-            print("here")
+            # TODO: Should change this so it is max(2 * d_z, base_pressure) otherwise pipes that are slightly only
+            #  slightly slanted will have really strange fill times
             self.update_pressure(2 * np.abs(d_z))
 
         # estimate simulation time needed
