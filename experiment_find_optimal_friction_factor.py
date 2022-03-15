@@ -133,8 +133,8 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
         simulation_report = f.read()
 
     # cleanup
-    # for file in glob(os.path.join(os.getcwd(), 'reports', "*")):
-    #     os.remove(file)
+    for file in glob(os.path.join(os.getcwd(), 'reports', "*")):
+        os.remove(file)
 
     # parse the report to find when the pipe opens (e.g. has filled)
     for line in simulation_report.splitlines():
