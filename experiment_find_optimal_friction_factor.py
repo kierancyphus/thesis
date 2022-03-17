@@ -92,7 +92,8 @@ def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
 
 
 def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20,
-                                     roughness: float = 100, height: float = 10, template_prefix=None, strategy=Strategy.SINGLE_TANK_CV) -> float:
+                                     roughness: float = 100, height: float = 10, template_prefix=None,
+                                     strategy=Strategy.SINGLE_TANK_CV, tank_height_multiplier: float = 1) -> float:
     """
     Creates an epanet file based on flat_template.inp
     :param length: pipe length
@@ -124,7 +125,7 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
         f.write(epanet_file)
 
     # # run simulations
-    wrapper = WNTRWrapper(epanet_file_path, is_iwn=True, strategy=strategy)
+    wrapper = WNTRWrapper(epanet_file_path, is_iwn=True, strategy=strategy, tank_height_multiplier=tank_height_multiplier)
     simulation_output_path = os.path.join(os.getcwd(), 'reports', epanet_file_path[:-4])
     wrapper.run_sim(simulation_output_path)
 
@@ -133,8 +134,8 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
         simulation_report = f.read()
 
     # cleanup
-    for file in glob(os.path.join(os.getcwd(), 'reports', "*")):
-        os.remove(file)
+    # for file in glob(os.path.join(os.getcwd(), 'reports', "*")):
+    #     os.remove(file)
 
     # parse the report to find when the pipe opens (e.g. has filled)
     for line in simulation_report.splitlines():
@@ -298,7 +299,7 @@ def run_experiments():
     Friction factor changes over pressure
     :return:
     """
-    pipe_lengths = list(np.linspace(100, 200, 20))
+    pipe_lengths = list(np.linspace(950, 1050, 20))
     friction_factors = np.linspace(0.02, 0.04, 100)
 
     # default params are pressure head of 20 and 300mm diameter
@@ -315,14 +316,14 @@ def run_experiments():
 
     # diameter
     length = 1000
-    diameters = list(np.linspace(0.1, 3, 50))
+    diameters = list(np.linspace(0.1, 3, 20))
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)
     plot_all(diameters, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Diameter [m]", "diameter")
 
     # pressure
-    pressures = np.linspace(5, 100, 50)
+    pressures = np.linspace(5, 100, 20)
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)

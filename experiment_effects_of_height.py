@@ -15,7 +15,10 @@ def run_ff_simulations_up(heights, pipe_length, diameter, pressure, roughness):
     for height in tqdm(heights, total=len(heights)):
         # run epanet simulation
         # Note: for a flat pipe, the friction factor doesn't affect the pipe equivalent length since it is always 0.44
-        epanet_fill_times.append(create_and_run_epanet_simulation(pipe_length, diameter, pressure, roughness, height, template_filepath, strategy=Strategy.SINGLE_TANK_CV_CONSTANT_PRESSURE))
+        epanet_fill_times.append(
+            create_and_run_epanet_simulation(pipe_length, diameter, pressure, roughness, height, template_filepath,
+                                             strategy=Strategy.SINGLE_TANK_CV_CONSTANT_PRESSURE,
+                                             tank_height_multiplier=0.92))
 
         # run numerical integration for different ff
         converter = PipeConverter()
@@ -26,12 +29,13 @@ def run_ff_simulations_up(heights, pipe_length, diameter, pressure, roughness):
 
 
 if __name__ == "__main__":
-    heights = np.linspace(0, 5, 40)
-    pipe_length = 1000
+    heights = np.linspace(0, 10, 40)
+    pipe_length = 1050
     diameter = 0.3
     pressure = 20
     roughness = 100
-    epanet_fill_times, simulation_fill_times = run_ff_simulations_up(heights, pipe_length, diameter, pressure, roughness)
+    epanet_fill_times, simulation_fill_times = run_ff_simulations_up(heights, pipe_length, diameter, pressure,
+                                                                     roughness)
     # sns.scatterplot(heights, epanet_fill_times, label="Epanet")
     # sns.scatterplot(heights, simulation_fill_times, label="Simulation")
     # plt.show()

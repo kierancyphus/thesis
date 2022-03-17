@@ -7,7 +7,8 @@ import argparse
 
 
 class FileParser:
-    def __init__(self, file_path: str, converter: PipeConverter, strategy: Strategy = Strategy.SINGLE_TANK_CV) -> None:
+    def __init__(self, file_path: str, converter: PipeConverter, strategy: Strategy = Strategy.SINGLE_TANK_CV,
+                 tank_height_multiplier: float = 1) -> None:
         self.file_path = file_path
         with open(file_path, 'r+') as file:
             self.file = file.read().splitlines()
@@ -35,7 +36,7 @@ class FileParser:
         self.converter.update_pressure(self.pressure)
 
         # initialize modification strategy
-        self.modification_strategy = ModificationStrategy(self, strategy)
+        self.modification_strategy = ModificationStrategy(self, strategy, tank_height_multiplier)
 
     def calculate_required_pressure(self) -> float:
         """
@@ -234,14 +235,7 @@ class FileParser:
 
         d_z, elevation_min = elevation_b - elevation_a, elevation_a
 
-        volume = 3.141 / 4 * (float(diameter) ** 2) * float(length)
-        if d_z == 0:
-            diameter_equivalent = np.sqrt(4 * volume / np.pi / 1)
-        else:
-            diameter_equivalent = np.sqrt(4 * volume / np.pi / d_z)
-
-        return ParsedPipe(pipe_id, node_a, node_b, float(length), diameter, d_z, elevation_min, volume,
-                          diameter_equivalent)
+        return ParsedPipe(pipe_id, node_a, node_b, float(length), diameter, d_z, elevation_min)
 
     def create_intermittent_network(self) -> None:
         # all pipes in the network must be initially closed

@@ -1,16 +1,17 @@
 from enum import Enum
 from ParsedPipe import ParsedPipe
+import numpy as np
 
 
 class Strategy(Enum):
     MULTIPLE_TANKS = 1
-    SINGLE_TANK_CV = 2                      # the pressure is assumed to be 2x change in height
+    SINGLE_TANK_CV = 2  # the pressure is assumed to be 2x change in height
     SINGLE_TANK_PSV = 3
-    SINGLE_TANK_CV_CONSTANT_PRESSURE = 4    # pressure is assumed to be constant
+    SINGLE_TANK_CV_CONSTANT_PRESSURE = 4  # pressure is assumed to be constant
 
 
 class ModificationStrategy:
-    def __init__(self, file_parser, strategy: Strategy = Strategy.SINGLE_TANK_CV) -> None:
+    def __init__(self, file_parser, strategy: Strategy = Strategy.SINGLE_TANK_CV, tank_height_multiplier: float = 1):
         self.strategy = strategy
         self.file_parser = file_parser
         self.methods = {
@@ -19,6 +20,7 @@ class ModificationStrategy:
             Strategy.SINGLE_TANK_PSV: self.single_tank_psv,
             Strategy.SINGLE_TANK_CV_CONSTANT_PRESSURE: self.single_tank_cv_constant_pressure
         }
+        self.tank_height_multiplier = tank_height_multiplier
 
     def evaluate(self, pipe: ParsedPipe) -> None:
         self.methods[self.strategy](pipe)
@@ -27,24 +29,35 @@ class ModificationStrategy:
     def multiple_tanks(self, pipe: ParsedPipe) -> None:
         raise NotImplementedError()
 
+    def update_tank_height_diameter(self, pipe: ParsedPipe) -> None:
+        volume = 3.141 / 4 * (float(pipe.diameter) ** 2) * float(pipe.length)
+        # the tank height is scaled by a global factor. This is used to test the effect of tank height on resistance
+        tank_d_z = pipe.d_z * self.tank_height_multiplier if pipe.d_z > 0.1 else 0.1
+        tank_diameter = np.sqrt(4 * volume / np.pi / tank_d_z)
+        # print(f"height: {tank_d_z}, diameter: {tank_diameter}")
+        pipe.update_tank_info(tank_diameter, tank_d_z)
+        return
+
     def single_tank_cv(self, pipe: ParsedPipe, update_pressure=True) -> None:
+        # calculate tank equivalent parameters
+        self.update_tank_height_diameter(pipe)
+
         # insert a new tank with volume the same as that of the original pipe
-        # print(pipe.diameter_equivalent)
-        tank_id = self.file_parser.add_tank(f"{pipe.node_a}_{pipe.node_b}_tank", pipe.elevation_min, pipe.d_z,
-                                            pipe.diameter_equivalent)
+        tank_id = self.file_parser.add_tank(f"{pipe.node_a}_{pipe.node_b}_tank", pipe.elevation_min, pipe.tank_height,
+                                            pipe.tank_diameter)
 
         # lower node; pipe sloping up (need check valve to prevent backflow)
-        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter, update_pressure=update_pressure)
+        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter,
+                                                                       update_pressure=update_pressure)
         self.file_parser.add_pipe(pipe.node_a, tank_id, equivalent_pipe, pipe.diameter, "CV")
 
         # upper node; pipe sloping down (need check valve to prevent backflow)
-        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, pipe.d_z, pipe.diameter, update_pressure=update_pressure)
+        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, pipe.d_z, pipe.diameter,
+                                                                       update_pressure=update_pressure)
         self.file_parser.add_pipe(pipe.node_b, tank_id, equivalent_pipe, pipe.diameter, "CV")
 
         # update the rules
-        # if the pipe is flat, the tank is assumed to have a height of 1m
-        tank_level = 1 if pipe.d_z == 0 else pipe.d_z
-        self.file_parser.add_rule(tank_id, tank_level, pipe.pipe_id)
+        self.file_parser.add_rule(tank_id, pipe.tank_height, pipe.pipe_id)
         return
 
     def single_tank_cv_constant_pressure(self, pipe: ParsedPipe) -> None:
@@ -54,7 +67,8 @@ class ModificationStrategy:
     def single_tank_psv(self, pipe: ParsedPipe) -> None:
         raise NotImplementedError()
         # TODO: I think this is broken
-        tank_id = self.file_parser.add_tank(f"{pipe.node_a}_{pipe.node_b}_tank", pipe.elevation_min, pipe.d_z, pipe.diameter_equivalent)
+        tank_id = self.file_parser.add_tank(f"{pipe.node_a}_{pipe.node_b}_tank", pipe.elevation_min, pipe.d_z,
+                                            pipe.tank_diameter)
 
         # lower node; pipe sloping up (need check valve to prevent backflow)
         equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter)
