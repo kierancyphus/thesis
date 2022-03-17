@@ -48,5 +48,5 @@ class FrictionFactorCalculator:
     def get_friction_factor(self) -> float:
         # 0.0263 for pressure 40
         # 0.0282 for pressure 20
-        return 0.0273
+        return 0.0261
         return self.lookup_table[self.length_closest][self.diameter_closest][self.pressure_closest]

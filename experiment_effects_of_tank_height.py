@@ -8,6 +8,25 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib
 
+"""
+Effects of Tank Height
+_______________________
+
+Seeing how different tank heights affect filling time in our EPANET simulations. Ideally, we would be able to use
+this as a way to model the growing resistance in a pipe as it fills, since tanks fill from the bottom, the more
+water that is pumped in it, the more it resists being filled and so should slow down the filling. The issue with this
+is that tank heights are currently set as a multiple of the height difference, which shouldn't be correlated with the
+internal pipe friction.
+
+Alternatively, variable tank height could be used to compensate for the gravitational effects of slanted pipes. For
+example, a pipe sloped upwards receives more gravitational resistance the fuller the pipe is because the effective
+mass increases, and thus the resistive force. For a downwards sloping pipe, this should be the opposite as the
+water will accelerate the more there is in the pipe (however, since we can't remove resistance with a tank this
+is tricky).
+
+"""
+
+
 # set seaborn theme
 cmap = sns.color_palette("coolwarm", as_cmap=True)
 sns.set_theme()
@@ -106,12 +125,11 @@ def run_tank_height_multiplier_simulations_height(pipe_heights, tank_height_mult
 
 if __name__ == "__main__":
     heights = np.linspace(0, 10, 20)
-    tank_height_multipliers = np.linspace(0.1, 1.3, 30)
-    pipe_length = 1050
+    tank_height_multipliers = np.linspace(0.8, 1.2, 30)
+    pipe_length = 550
     diameter = 0.3
     pressure = 20
     roughness = 100
-    tank_height_multiplier = 0.5
 
     simulation_fill_times, epanet_fill_times_by_thm, best_thm_index = run_tank_height_multiplier_simulations_height(
         pipe_heights=heights,

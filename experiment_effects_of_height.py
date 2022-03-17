@@ -18,7 +18,7 @@ def run_ff_simulations_up(heights, pipe_length, diameter, pressure, roughness):
         epanet_fill_times.append(
             create_and_run_epanet_simulation(pipe_length, diameter, pressure, roughness, height, template_filepath,
                                              strategy=Strategy.SINGLE_TANK_CV_CONSTANT_PRESSURE,
-                                             tank_height_multiplier=0.92))
+                                             tank_height_multiplier=0.93))
 
         # run numerical integration for different ff
         converter = PipeConverter()
@@ -30,7 +30,7 @@ def run_ff_simulations_up(heights, pipe_length, diameter, pressure, roughness):
 
 if __name__ == "__main__":
     heights = np.linspace(0, 10, 40)
-    pipe_length = 1050
+    pipe_length = 550
     diameter = 0.3
     pressure = 20
     roughness = 100
