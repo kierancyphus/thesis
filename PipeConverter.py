@@ -36,6 +36,7 @@ class PipeConverter:
             return np.sqrt(delta_h / c / x)
 
         def derivative_laminar_flow(x, t, delta_h, theta, d, g):
+            # ff not constant -> included within ODE
             return ((d ** 2) * g / 32 / x) * (delta_h - x * np.sin(theta))
 
         # x: np.ndarray = odeint(derivative_laminar_flow, 1e-7, t, args=(self.d_h, theta, 0.3, self.g))
@@ -96,6 +97,7 @@ class PipeConverter:
 
         # calculate equivalent stats
         velocity_eq = length / tau
+        d_z = 0 if d_z > 0 else d_z
         length_eq = (self.d_h - d_z) / self.c / (velocity_eq ** 2)
 
         return length_eq

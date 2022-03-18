@@ -47,13 +47,15 @@ class ModificationStrategy:
                                             pipe.tank_diameter)
 
         # lower node; pipe sloping up (need check valve to prevent backflow)
-        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter,
+        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, pipe.d_z, pipe.diameter,
                                                                        update_pressure=update_pressure)
+        print(f"up slope, d_z = {pipe.d_z}, leq = {equivalent_pipe}")
         self.file_parser.add_pipe(pipe.node_a, tank_id, equivalent_pipe, pipe.diameter, "CV")
 
         # upper node; pipe sloping down (need check valve to prevent backflow)
-        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, pipe.d_z, pipe.diameter,
+        equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter,
                                                                        update_pressure=update_pressure)
+        print(f"down slope, d_z = {-pipe.d_z}, leq = {equivalent_pipe}")
         self.file_parser.add_pipe(pipe.node_b, tank_id, equivalent_pipe, pipe.diameter, "CV")
 
         # update the rules

@@ -299,7 +299,7 @@ def run_experiments():
     Friction factor changes over pressure
     :return:
     """
-    pipe_lengths = list(np.linspace(2000, 2010, 20))
+    pipe_lengths = list(np.linspace(1000, 1010, 20))
     friction_factors = np.linspace(0.02, 0.03, 100)
 
     # default params are pressure head of 20 and 300mm diameter

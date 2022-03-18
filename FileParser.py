@@ -228,11 +228,13 @@ class FileParser:
         # need to convert between m and mm
         diameter = self.convert_pipe_diameter(float(diameter), read=True)
 
+        # node_a should always be lower elevation
         elevation_a, elevation_b = self.get_elevation(node_a), self.get_elevation(node_b)
         if elevation_a > elevation_b:
             node_a, node_b = node_b, node_a
             elevation_a, elevation_b = elevation_b, elevation_a
 
+        # d_z is always positive
         d_z, elevation_min = elevation_b - elevation_a, elevation_a
 
         return ParsedPipe(pipe_id, node_a, node_b, float(length), diameter, d_z, elevation_min)

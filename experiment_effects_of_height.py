@@ -49,8 +49,8 @@ def run_down_simulation(heights, pipe_length, diameter, pressure, roughness):
 
 
 if __name__ == "__main__":
-    heights = np.linspace(0, 10, 40)
-    pipe_length = 550
+    heights = np.linspace(3, 10, 40)
+    pipe_length = 1000
     diameter = 0.3
     pressure = 20
     roughness = 100
