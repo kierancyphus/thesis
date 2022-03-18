@@ -16,7 +16,8 @@ Seeing how different tank heights affect filling time in our EPANET simulations.
 this as a way to model the growing resistance in a pipe as it fills, since tanks fill from the bottom, the more
 water that is pumped in it, the more it resists being filled and so should slow down the filling. The issue with this
 is that tank heights are currently set as a multiple of the height difference, which shouldn't be correlated with the
-internal pipe friction.
+internal pipe friction. Ideally, however, our calibration with the average friction factor should have negated, these,
+and thus, the only relationship left should be with gravity.
 
 Alternatively, variable tank height could be used to compensate for the gravitational effects of slanted pipes. For
 example, a pipe sloped upwards receives more gravitational resistance the fuller the pipe is because the effective

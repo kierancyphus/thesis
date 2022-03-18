@@ -1,6 +1,7 @@
 from PipeConverter import PipeConverter
 import argparse
 from typing import Union
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -14,9 +15,16 @@ if __name__ == "__main__":
     # consider the flat pipe case
     pressure = args.elevation * 2 if args.pressure is None else args.pressure
     converter.update_pressure(pressure)
-    time = converter.fill_time(args.length, args.elevation, args.diameter, update_pressure=False)
-    print(f"Fill time: {time} s")
-    print(f"{int(time // 60)}:{time % 60:.0f}")
+    tau, t, x = converter.fill_time(args.length, args.elevation, args.diameter, update_pressure=False, return_fronts=True)
+    print(f"Fill time: {tau} s")
+    print(f"{int(tau // 60)}:{tau % 60:.0f}")
     equivalent = converter.equivalent_length(args.length, args.elevation, args.diameter, update_pressure=False)
     print(f"Equivalent length: {equivalent}")
 
+    plt.plot(t, x)
+    plt.show()
+
+    # derivative
+    v = [0] + [x[i] - x[i - 1] for i in range(1, len(x))]
+    plt.plot(t, v)
+    plt.show()

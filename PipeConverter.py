@@ -37,6 +37,7 @@ class PipeConverter:
 
         def derivative_laminar_flow(x, t, delta_h, theta, d, g):
             return ((d ** 2) * g / 32 / x) * (delta_h - x * np.sin(theta))
+
         # x: np.ndarray = odeint(derivative_laminar_flow, 1e-7, t, args=(self.d_h, theta, 0.3, self.g))
         # set to be really small number so we don't get divide by 0 errors
         if flat:
@@ -45,7 +46,8 @@ class PipeConverter:
             x: np.ndarray = odeint(derivative, 1e-7, t, args=(self.d_h, self.c, theta))
         return t, x
 
-    def fill_time(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float], update_f: bool = True, update_pressure: bool = True) -> float:
+    def fill_time(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float],
+                  update_f: bool = True, update_pressure: bool = True, return_fronts: bool = False) -> float:
         # if it's pretty much flat just use flat pipe
         is_flat = np.abs(d_z) < 0.01
 
@@ -72,9 +74,10 @@ class PipeConverter:
         # roughly calculate the time it takes to fill through linear interpolation
         tau = np.interp(length, x, t)
 
-        return tau
+        return (tau, t, x) if return_fronts else tau
 
-    def equivalent_length(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float], update_pressure: bool = True) -> float:
+    def equivalent_length(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float],
+                          update_pressure: bool = True) -> float:
         """
         Note: This assumes that the pipe fills in less than three minutes.
 
