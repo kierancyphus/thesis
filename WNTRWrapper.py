@@ -1,4 +1,4 @@
-# import wntr
+import wntr
 from PipeConverter import PipeConverter
 from FileParser import FileParser
 import argparse
