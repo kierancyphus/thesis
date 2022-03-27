@@ -125,8 +125,8 @@ def run_tank_height_multiplier_simulations_height(pipe_heights, tank_height_mult
 
 
 if __name__ == "__main__":
-    heights = np.linspace(0, 10, 20)
-    tank_height_multipliers = np.linspace(0.5, 1, 30)
+    heights = np.linspace(0, 18, 20)
+    tank_height_multipliers = np.linspace(0.8, 1.2, 30)
     pipe_length = 1000
     diameter = 0.3
     pressure = 20

@@ -28,6 +28,10 @@ class PipeConverter:
         # The pipe friction factors are chosen based on calibration data
         self.c = self.f / diameter / 2 / self.g
 
+    def _calculate_cf(self, d_z: float, length: float) -> float:
+        cf = 0.03342 * d_z + 1
+        pass
+
     def _fill_numerically(self, t: np.ndarray, theta: float, flat: bool = False) -> Tuple[np.ndarray, np.ndarray]:
         def derivative(x, t, delta_h, c, theta):
             return np.sqrt(delta_h / c / x - np.sin(theta) / c)
@@ -78,7 +82,7 @@ class PipeConverter:
         return (tau, t, x) if return_fronts else tau
 
     def equivalent_length(self, length: Union[int, float], d_z: Union[int, float], diameter: Union[int, float],
-                          update_pressure: bool = True) -> float:
+                          update_pressure: bool = True, cf: float = 1) -> float:
         """
         Note: This assumes that the pipe fills in less than three minutes.
 
@@ -98,6 +102,7 @@ class PipeConverter:
         # calculate equivalent stats
         velocity_eq = length / tau
         d_z = 0 if d_z > 0 else d_z
-        length_eq = (self.d_h - d_z) / self.c / (velocity_eq ** 2)
+        # update by a corrective factor (multiplication is easier to correct for
+        length_eq = (self.d_h - d_z) / self.c / (velocity_eq ** 2) * cf
 
         return length_eq

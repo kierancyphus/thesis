@@ -8,7 +8,7 @@ import argparse
 
 class FileParser:
     def __init__(self, file_path: str, converter: PipeConverter, strategy: Strategy = Strategy.SINGLE_TANK_CV,
-                 tank_height_multiplier: float = 1) -> None:
+                 tank_height_multiplier: float = 1, cf: float = 1) -> None:
         self.file_path = file_path
         with open(file_path, 'r+') as file:
             self.file = file.read().splitlines()
@@ -36,7 +36,7 @@ class FileParser:
         self.converter.update_pressure(self.pressure)
 
         # initialize modification strategy
-        self.modification_strategy = ModificationStrategy(self, strategy, tank_height_multiplier)
+        self.modification_strategy = ModificationStrategy(self, strategy, tank_height_multiplier, cf=cf)
 
     def calculate_required_pressure(self) -> float:
         """

@@ -93,7 +93,8 @@ def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
 
 def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20,
                                      roughness: float = 100, height: float = 10, template_prefix=None,
-                                     strategy=Strategy.SINGLE_TANK_CV, tank_height_multiplier: float = 1) -> float:
+                                     strategy=Strategy.SINGLE_TANK_CV, tank_height_multiplier: float = 1,
+                                     cf: float = 1) -> float:
     """
     Creates an epanet file based on flat_template.inp
     :param length: pipe length
@@ -120,12 +121,15 @@ def create_and_run_epanet_simulation(length: float, diameter: float = 300, press
         os.makedirs('reports')
 
     # save file
-    epanet_file_path = os.path.join(os.getcwd(), 'reports', f"{template_prefix[:-4]}_{length}_{diameter}_{pressure}_{roughness}_{height}.inp")
+    epanet_file_path = os.path.join(os.getcwd(), 'reports',
+                                    f"{template_prefix[:-4]}_{length}_{diameter}_{pressure}_{roughness}_{height}.inp")
     with open(epanet_file_path, 'w') as f:
         f.write(epanet_file)
 
     # # run simulations
-    wrapper = WNTRWrapper(epanet_file_path, is_iwn=True, strategy=strategy, tank_height_multiplier=tank_height_multiplier)
+    wrapper = WNTRWrapper(epanet_file_path, is_iwn=True, strategy=strategy,
+                          tank_height_multiplier=tank_height_multiplier,
+                          cf=cf)
     simulation_output_path = os.path.join(os.getcwd(), 'reports', epanet_file_path[:-4])
     wrapper.run_sim(simulation_output_path)
 
@@ -312,7 +316,8 @@ def run_experiments():
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_length(pipe_lengths, friction_factors,
                                                                                         pressure, diameter, loss,
                                                                                         roughness)
-    plot_all(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Length [m]", "length")
+    plot_all(pipe_lengths, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Length [m]",
+             "length")
 
     # diameter
     length = 1000
@@ -320,14 +325,16 @@ def run_experiments():
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)
-    plot_all(diameters, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Diameter [m]", "diameter")
+    plot_all(diameters, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pipe Diameter [m]",
+             "diameter")
 
     # pressure
     pressures = np.linspace(5, 100, 20)
     epanet_fill_times, simulation_fill_times_by_ff, best_ff = run_ff_simulations_diameter(length, friction_factors,
                                                                                           pressure, diameters, loss,
                                                                                           roughness)
-    plot_all(pressures, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pressure Head [m]", "pressure")
+    plot_all(pressures, epanet_fill_times, friction_factors, simulation_fill_times_by_ff, best_ff, "Pressure Head [m]",
+             "pressure")
 
 
 if __name__ == "__main__":

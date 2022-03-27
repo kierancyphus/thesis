@@ -11,7 +11,8 @@ class Strategy(Enum):
 
 
 class ModificationStrategy:
-    def __init__(self, file_parser, strategy: Strategy = Strategy.SINGLE_TANK_CV, tank_height_multiplier: float = 1):
+    def __init__(self, file_parser, strategy: Strategy = Strategy.SINGLE_TANK_CV, tank_height_multiplier: float = 1,
+                 cf: float = 1):
         self.strategy = strategy
         self.file_parser = file_parser
         self.methods = {
@@ -21,6 +22,7 @@ class ModificationStrategy:
             Strategy.SINGLE_TANK_CV_CONSTANT_PRESSURE: self.single_tank_cv_constant_pressure
         }
         self.tank_height_multiplier = tank_height_multiplier
+        self.cf = cf
 
     def evaluate(self, pipe: ParsedPipe) -> None:
         self.methods[self.strategy](pipe)
@@ -54,7 +56,8 @@ class ModificationStrategy:
 
         # upper node; pipe sloping down (need check valve to prevent backflow)
         equivalent_pipe = self.file_parser.converter.equivalent_length(pipe.length, -pipe.d_z, pipe.diameter,
-                                                                       update_pressure=update_pressure)
+                                                                       update_pressure=update_pressure,
+                                                                       cf=self.cf)
         # print(f"down slope, d_z = {-pipe.d_z}, leq = {equivalent_pipe}")
         self.file_parser.add_pipe(pipe.node_b, tank_id, equivalent_pipe, pipe.diameter, "CV")
 
