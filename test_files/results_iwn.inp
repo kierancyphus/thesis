@@ -1,0 +1,167 @@
+[TITLE]
+A single pipe with a tank at an elevation of ten metres pouring out into a reservoir.
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern
+ 2	0	0		;
+ 3	0	0		;
+ 4	0	0		;
+ 5	0	0		;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern
+ 1	20		;
+ 6	0		;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+;Automated content below - Do not edit!
+2_1_tank	0.0	0	0	20.0	2.121120243235821	0		;
+2_3_tank	0.0	0	0	0.1	29.997170154082166	0		;
+3_4_tank	0.0	0	0	0.1	29.997170154082166	0		;
+4_5_tank	0.0	0	0	0.1	29.997170154082166	0		;
+5_6_tank	0.0	0	0	0.1	29.997170154082166	0		;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ 7	1	2	1000	300	100	0	Closed	;
+ 8	2	3	1000	300	100	0	Closed	;
+ 9	3	4	1000	300	100	0	Closed	;
+ 10	4	5	1000	300	100	0	Closed	;
+ 11	5	6	1000	300	100	0	Closed	;
+;Automated content below - Do not edit!
+2->2_1_tank	2	2_1_tank	651.6168543593259	300.0	100	0	CV	;
+1->2_1_tank	1	2_1_tank	516.9063482810385	300.0	100	0	CV	;
+2->2_3_tank	2	2_3_tank	444.4444444444444	300.0	100	0	CV	;
+3->2_3_tank	3	2_3_tank	444.4444444444444	300.0	100	0	CV	;
+3->3_4_tank	3	3_4_tank	444.4444444444444	300.0	100	0	CV	;
+4->3_4_tank	4	3_4_tank	444.4444444444444	300.0	100	0	CV	;
+4->4_5_tank	4	4_5_tank	444.4444444444444	300.0	100	0	CV	;
+5->4_5_tank	5	4_5_tank	444.4444444444444	300.0	100	0	CV	;
+5->5_6_tank	5	5_6_tank	444.4444444444444	300.0	100	0	CV	;
+6->5_6_tank	6	5_6_tank	444.4444444444444	300.0	100	0	CV	;
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+
+[STATUS]
+;ID              	Status/Setting
+
+[PATTERNS]
+;ID              	Multipliers
+;Demand Pattern
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+
+[CONTROLS]
+
+[RULES]
+;Automated content below - Do not edit!
+RULE	1
+IF	TANK	2_1_tank	LEVEL	ABOVE	19.8
+THEN	PIPE	 7	STATUS	IS	OPEN
+
+ 
+RULE	2
+IF	TANK	2_3_tank	LEVEL	ABOVE	0.099
+THEN	PIPE	 8	STATUS	IS	OPEN
+
+ 
+RULE	3
+IF	TANK	3_4_tank	LEVEL	ABOVE	0.099
+THEN	PIPE	 9	STATUS	IS	OPEN
+
+ 
+RULE	4
+IF	TANK	4_5_tank	LEVEL	ABOVE	0.099
+THEN	PIPE	 10	STATUS	IS	OPEN
+
+ 
+RULE	5
+IF	TANK	5_6_tank	LEVEL	ABOVE	0.099
+THEN	PIPE	 11	STATUS	IS	OPEN
+
+ 
+
+[ENERGY]
+ Global Efficiency  	75
+ Global Price       	0.0
+ Demand Charge      	0.0
+
+[EMITTERS]
+;Junction        	Coefficient
+
+[QUALITY]
+;Node            	InitQual
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	2:12:00
+ Hydraulic Timestep 	0:00:30
+ Report Timestep    	0:01
+ Report Start       	0:00
+ Start ClockTime    	12 am
+ Statistic          	None
+
+[REPORT]
+ Status             	Yes
+ Summary            	Yes
+ Page               	0
+
+[OPTIONS]
+ Units              	LPM
+ Headloss           	H-W
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	40
+ Accuracy           	0.001
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0
+ Unbalanced         	Continue 10
+ Pattern            	1
+ Demand Multiplier  	1.0
+ Emitter Exponent   	0.5
+ Quality            	Chlorine mg/L
+ Diffusivity        	1.0
+ Tolerance          	0.01
+
+[COORDINATES]
+;Node            	X-Coord         	Y-Coord
+ 1	10.0	75.0	;
+ 2	20.0	50.0	;
+ 3	30.0	50.0	;
+ 4	40.0	50.0	;
+ 5	50.0	50.0	;
+ 6	60.0	50.0	;
+
+[VERTICES]
+;Link            	X-Coord         	Y-Coord
+
+[LABELS]
+;X-Coord           Y-Coord          Label & Anchor Node
+
+[BACKDROP]
+ DIMENSIONS     	0.00            	0.00            	100.00           	100.00
+ UNITS          	None
+ FILE
+ OFFSET         	0.00            	0.00
+
+[END]
