@@ -1,42 +1,40 @@
 [TITLE]
-A single pipe with a tank at an elevation of ten metres pouring out into a reservoir.
+A series of 10 pipes each rising 1m in elevation powered by a 20m reservoir.
 
 [JUNCTIONS]
 ;ID              	Elev        	Demand      	Pattern
  2	0	0		;
- 3	0	0		;
- 4	0	0		;
- 5	0	0		;
+ 3	1	0		;
+ 4	2	0		;
+ 5	3	0		;
+ 6	4	0		;
+ 7	5	0		;
+ 8	6	0		;
+ 9	7	0		;
+ 10	8	0		;
+ 11	9	0		;
 
 [RESERVOIRS]
 ;ID              	Head        	Pattern
  1	20		;
- 6	0		;
+ 12	10		;
 
 [TANKS]
 ;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
-;Automated content below - Do not edit!
-2_3_tank	0.0	0	0	0.1	29.997170154082166	0		;
-3_4_tank	0.0	0	0	0.1	29.997170154082166	0		;
-4_5_tank	0.0	0	0	0.1	29.997170154082166	0		;
-5_6_tank	0.0	0	0	0.1	29.997170154082166	0		;
 
 [PIPES]
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
- 7	1	2	0.5	1000	100	0	Open	;
- 8	2	3	1000	300	100	0	Closed	;
- 9	3	4	1000	300	100	0	Closed	;
- 10	4	5	1000	300	100	0	Closed	;
- 11	5	6	1000	300	100	0	Closed	;
-;Automated content below - Do not edit!
-2->2_3_tank	2	2_3_tank	444.4444444444444	300.0	100	0	CV	;
-3->2_3_tank	3	2_3_tank	444.4444444444444	300.0	100	0	CV	;
-3->3_4_tank	3	3_4_tank	444.4444444444444	300.0	100	0	CV	;
-4->3_4_tank	4	3_4_tank	444.4444444444444	300.0	100	0	CV	;
-4->4_5_tank	4	4_5_tank	444.4444444444444	300.0	100	0	CV	;
-5->4_5_tank	5	4_5_tank	444.4444444444444	300.0	100	0	CV	;
-5->5_6_tank	5	5_6_tank	444.4444444444444	300.0	100	0	CV	;
-6->5_6_tank	6	5_6_tank	444.4444444444444	300.0	100	0	CV	;
+ 13	1	2	0.5	1000	100	0	Open	;
+ 14	2	3	500	300	100	0	Open	;
+ 15	3	4	500	300	100	0	Open	;
+ 16	4	5	500	300	100	0	Open	;
+ 17	5	6	500	300	100	0	Open	;
+ 18	6	7	500	300	100	0	Open	;
+ 19	7	8	500	300	100	0	Open	;
+ 20	8	9	500	300	100	0	Open	;
+ 21	9	10	500	300	100	0	Open	;
+ 22	10	11	500	300	100	0	Open	;
+ 23	11	12	500	300	100	0	Open	;
 
 [PUMPS]
 ;ID              	Node1           	Node2           	Parameters
@@ -62,27 +60,6 @@ A single pipe with a tank at an elevation of ten metres pouring out into a reser
 [CONTROLS]
 
 [RULES]
-;Automated content below - Do not edit!
-RULE	1
-IF	TANK	2_3_tank	LEVEL	ABOVE	0.099
-THEN	PIPE	 8	STATUS	IS	OPEN
-
- 
-RULE	2
-IF	TANK	3_4_tank	LEVEL	ABOVE	0.099
-THEN	PIPE	 9	STATUS	IS	OPEN
-
- 
-RULE	3
-IF	TANK	4_5_tank	LEVEL	ABOVE	0.099
-THEN	PIPE	 10	STATUS	IS	OPEN
-
- 
-RULE	4
-IF	TANK	5_6_tank	LEVEL	ABOVE	0.099
-THEN	PIPE	 11	STATUS	IS	OPEN
-
- 
 
 [ENERGY]
  Global Efficiency  	75
@@ -137,12 +114,18 @@ THEN	PIPE	 11	STATUS	IS	OPEN
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord
- 1	10.0	75.0	;
- 2	20.0	50.0	;
- 3	30.0	50.0	;
- 4	40.0	50.0	;
- 5	50.0	50.0	;
- 6	60.0	50.0	;
+ 1	10.0	50.0	;
+ 2	15.0	0.0	;
+ 3	20.0	2.5	;
+ 4	25.0	5.0	;
+ 5	30.0	7.5	;
+ 6	35.0	10.0	;
+ 7	40.0	12.5	;
+ 8	45.0	15.0	;
+ 9	50.0	17.5	;
+ 10	55.0	20.0	;
+ 11	60.0	22.5	;
+ 12	65.0	25.0	;
 
 [VERTICES]
 ;Link            	X-Coord         	Y-Coord

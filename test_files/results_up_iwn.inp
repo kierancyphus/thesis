@@ -1,0 +1,225 @@
+[TITLE]
+A series of 10 pipes each rising 1m in elevation powered by a 20m reservoir.
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern
+ 2	0	0		;
+ 3	1	0		;
+ 4	2	0		;
+ 5	3	0		;
+ 6	4	0		;
+ 7	5	0		;
+ 8	6	0		;
+ 9	7	0		;
+ 10	8	0		;
+ 11	9	0		;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern
+ 1	20		;
+ 12	10		;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+;Automated content below - Do not edit!
+2_3_tank	0.0	0	0	1.0	6.707571159715556	0		;
+3_4_tank	1.0	0	0	1.0	6.707571159715556	0		;
+4_5_tank	2.0	0	0	1.0	6.707571159715556	0		;
+5_6_tank	3.0	0	0	1.0	6.707571159715556	0		;
+6_7_tank	4.0	0	0	1.0	6.707571159715556	0		;
+7_8_tank	5.0	0	0	1.0	6.707571159715556	0		;
+8_9_tank	6.0	0	0	1.0	6.707571159715556	0		;
+9_10_tank	7.0	0	0	1.0	6.707571159715556	0		;
+10_11_tank	8.0	0	0	1.0	6.707571159715556	0		;
+11_12_tank	9.0	0	0	1.0	6.707571159715556	0		;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ 13	1	2	0.5	1000	100	0	Open	;
+ 14	2	3	500	300	100	0	Closed	;
+ 15	3	4	500	300	100	0	Closed	;
+ 16	4	5	500	300	100	0	Closed	;
+ 17	5	6	500	300	100	0	Closed	;
+ 18	6	7	500	300	100	0	Closed	;
+ 19	7	8	500	300	100	0	Closed	;
+ 20	8	9	500	300	100	0	Closed	;
+ 21	9	10	500	300	100	0	Closed	;
+ 22	10	11	500	300	100	0	Closed	;
+ 23	11	12	500	300	100	0	Closed	;
+;Automated content below - Do not edit!
+2->2_3_tank	2	2_3_tank	207.88074343613522	300.0	100	0	CV	;
+3->2_3_tank	3	2_3_tank	258.4531711925876	300.0	100	0	CV	;
+3->3_4_tank	3	3_4_tank	207.88074343613522	300.0	100	0	CV	;
+4->3_4_tank	4	3_4_tank	258.4531711925876	300.0	100	0	CV	;
+4->4_5_tank	4	4_5_tank	207.88074343613522	300.0	100	0	CV	;
+5->4_5_tank	5	4_5_tank	258.4531711925876	300.0	100	0	CV	;
+5->5_6_tank	5	5_6_tank	207.88074343613522	300.0	100	0	CV	;
+6->5_6_tank	6	5_6_tank	258.4531711925876	300.0	100	0	CV	;
+6->6_7_tank	6	6_7_tank	207.88074343613522	300.0	100	0	CV	;
+7->6_7_tank	7	6_7_tank	258.4531711925876	300.0	100	0	CV	;
+7->7_8_tank	7	7_8_tank	207.88074343613522	300.0	100	0	CV	;
+8->7_8_tank	8	7_8_tank	258.4531711925876	300.0	100	0	CV	;
+8->8_9_tank	8	8_9_tank	207.88074343613522	300.0	100	0	CV	;
+9->8_9_tank	9	8_9_tank	258.4531711925876	300.0	100	0	CV	;
+9->9_10_tank	9	9_10_tank	207.88074343613522	300.0	100	0	CV	;
+10->9_10_tank	10	9_10_tank	258.4531711925876	300.0	100	0	CV	;
+10->10_11_tank	10	10_11_tank	207.88074343613522	300.0	100	0	CV	;
+11->10_11_tank	11	10_11_tank	258.4531711925876	300.0	100	0	CV	;
+11->11_12_tank	11	11_12_tank	207.88074343613522	300.0	100	0	CV	;
+12->11_12_tank	12	11_12_tank	258.4531711925876	300.0	100	0	CV	;
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+
+[STATUS]
+;ID              	Status/Setting
+
+[PATTERNS]
+;ID              	Multipliers
+;Demand Pattern
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+
+[CONTROLS]
+
+[RULES]
+;Automated content below - Do not edit!
+RULE	1
+IF	TANK	2_3_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 14	STATUS	IS	OPEN
+
+ 
+RULE	2
+IF	TANK	3_4_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 15	STATUS	IS	OPEN
+
+ 
+RULE	3
+IF	TANK	4_5_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 16	STATUS	IS	OPEN
+
+ 
+RULE	4
+IF	TANK	5_6_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 17	STATUS	IS	OPEN
+
+ 
+RULE	5
+IF	TANK	6_7_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 18	STATUS	IS	OPEN
+
+ 
+RULE	6
+IF	TANK	7_8_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 19	STATUS	IS	OPEN
+
+ 
+RULE	7
+IF	TANK	8_9_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 20	STATUS	IS	OPEN
+
+ 
+RULE	8
+IF	TANK	9_10_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 21	STATUS	IS	OPEN
+
+ 
+RULE	9
+IF	TANK	10_11_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 22	STATUS	IS	OPEN
+
+ 
+RULE	10
+IF	TANK	11_12_tank	LEVEL	ABOVE	0.99
+THEN	PIPE	 23	STATUS	IS	OPEN
+
+ 
+
+[ENERGY]
+ Global Efficiency  	75
+ Global Price       	0.0
+ Demand Charge      	0.0
+
+[EMITTERS]
+;Junction        	Coefficient
+
+[QUALITY]
+;Node            	InitQual
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	2:12:00
+ Hydraulic Timestep 	0:00:30
+ Report Timestep    	0:01
+ Report Start       	0:00
+ Start ClockTime    	12 am
+ Statistic          	None
+
+[REPORT]
+ Status             	Yes
+ Summary            	Yes
+ Page               	0
+
+[OPTIONS]
+ Units              	LPM
+ Headloss           	H-W
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	40
+ Accuracy           	0.001
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0
+ Unbalanced         	Continue 10
+ Pattern            	1
+ Demand Multiplier  	1.0
+ Emitter Exponent   	0.5
+ Quality            	Chlorine mg/L
+ Diffusivity        	1.0
+ Tolerance          	0.01
+
+[COORDINATES]
+;Node            	X-Coord         	Y-Coord
+ 1	10.0	50.0	;
+ 2	15.0	0.0	;
+ 3	20.0	2.5	;
+ 4	25.0	5.0	;
+ 5	30.0	7.5	;
+ 6	35.0	10.0	;
+ 7	40.0	12.5	;
+ 8	45.0	15.0	;
+ 9	50.0	17.5	;
+ 10	55.0	20.0	;
+ 11	60.0	22.5	;
+ 12	65.0	25.0	;
+
+[VERTICES]
+;Link            	X-Coord         	Y-Coord
+
+[LABELS]
+;X-Coord           Y-Coord          Label & Anchor Node
+
+[BACKDROP]
+ DIMENSIONS     	0.00            	0.00            	100.00           	100.00
+ UNITS          	None
+ FILE
+ OFFSET         	0.00            	0.00
+
+[END]
