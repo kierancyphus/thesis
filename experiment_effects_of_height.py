@@ -1,4 +1,4 @@
-from experiment_find_optimal_friction_factor import create_and_run_epanet_simulation, get_difference
+from experiment_utils import create_and_run_epanet_simulation
 from PipeConverter import PipeConverter
 from ModificationStrategy import Strategy
 from tqdm import tqdm

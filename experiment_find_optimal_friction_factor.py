@@ -1,6 +1,4 @@
 import os
-import re
-from glob import glob
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -8,9 +6,8 @@ import numpy as np
 import seaborn as sns
 from tqdm import tqdm
 
+from experiment_utils import create_and_run_epanet_simulation
 from PipeConverter import PipeConverter
-from WNTRWrapper import WNTRWrapper
-from ModificationStrategy import Strategy
 
 # set seaborn theme
 cmap = sns.color_palette("coolwarm", as_cmap=True)
@@ -90,66 +87,6 @@ def get_difference(a: np.ndarray, b: np.ndarray, loss: str = "mse"):
         return np.sum(np.abs(a - b))
     return np.sum((a - b) ** 2)
 
-
-def create_and_run_epanet_simulation(length: float, diameter: float = 300, pressure: float = 20,
-                                     roughness: float = 100, height: float = 10, template_prefix=None,
-                                     strategy=Strategy.SINGLE_TANK_CV, tank_height_multiplier: float = 1,
-                                     cf: float = 1) -> float:
-    """
-    Creates an epanet file based on flat_template.inp
-    :param length: pipe length
-    :return: tau, time it takes for the pipe to fill
-    """
-    template_prefix = 'flat_template.inp' if template_prefix is None else template_prefix
-    template_filepath = os.path.join(os.getcwd(), 'test_files', template_prefix)
-    if not os.path.isfile(template_filepath):
-        raise ValueError('Make sure that flat_template.inp is in the test_files folder')
-
-    # create epanet file
-    with open(template_filepath, 'r') as f:
-        template = f.read()
-
-    # replace length tag with actual length
-    epanet_file = re.sub(r"<length>", str(length), template)
-    epanet_file = re.sub(r"<diameter>", str(diameter * 1000), epanet_file)
-    epanet_file = re.sub(r"<pressure>", str(pressure), epanet_file)
-    epanet_file = re.sub(r"<roughness>", str(roughness), epanet_file)
-    epanet_file = re.sub(f"<height>", str(height), epanet_file)
-
-    # create reports folder if not exists
-    if not os.path.exists('reports'):
-        os.makedirs('reports')
-
-    # save file
-    epanet_file_path = os.path.join(os.getcwd(), 'reports',
-                                    f"{template_prefix[:-4]}_{length}_{diameter}_{pressure}_{roughness}_{height}.inp")
-    with open(epanet_file_path, 'w') as f:
-        f.write(epanet_file)
-
-    # # run simulations
-    wrapper = WNTRWrapper(epanet_file_path, is_iwn=True, strategy=strategy,
-                          tank_height_multiplier=tank_height_multiplier,
-                          cf=cf)
-    simulation_output_path = os.path.join(os.getcwd(), 'reports', epanet_file_path[:-4])
-    wrapper.run_sim(simulation_output_path)
-
-    # parse report (only way to get good timestep)
-    with open(simulation_output_path + ".rpt", 'r') as f:
-        simulation_report = f.read()
-
-    # cleanup
-    # for file in glob(os.path.join(os.getcwd(), 'reports', "*")):
-    #     os.remove(file)
-
-    # parse the report to find when the pipe opens (e.g. has filled)
-    for line in simulation_report.splitlines():
-        if "Pipe 7 changed from closed to open" in line:
-            timestamp = line.strip().split(" ")[0]
-            time_seconds = int(timestamp.split(":")[0]) * 60 * 60 + int(timestamp.split(":")[1]) * 60 + int(
-                timestamp.split(":")[2])
-            return time_seconds
-    # should never get this but need a fallback if the flat pipe never fills
-    return -1
 
 
 def run_ff_simulations_diameter(pipe_length, friction_factors, pressure, diameters, loss, roughness):

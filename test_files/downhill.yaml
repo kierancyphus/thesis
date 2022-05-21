@@ -1,0 +1,9 @@
+pipes:
+  length: [0.5, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 0.5]
+  diameter: [1000, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 1000]
+  elevation: [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10]
+
+reservoirs:
+  elevation: [40, 0]
+
+# equivalent pipe is 5km long, 0.3m diameter w/ 20 m pressure and -10m elevation
